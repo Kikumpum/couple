@@ -34,16 +34,16 @@ export const initialSavingsGoals = [
   {
     id: "wedding",
     name: "Tabungan Menikah",
-    current: 42650000,
+    current: 0,
     target: 75000000,
-    monthlyChange: 8.4
+    monthlyChange: 0
   },
   {
     id: "emergency",
     name: "Dana Darurat",
-    current: 18400000,
+    current: 0,
     target: 30000000,
-    monthlyChange: 3.1
+    monthlyChange: 0
   }
 ];
 

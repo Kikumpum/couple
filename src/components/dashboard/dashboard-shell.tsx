@@ -91,32 +91,37 @@ type JajanExpense = {
   date: string;
 };
 
+type DashboardStateResponse = {
+  exists: boolean;
+  savingsGoals: unknown;
+  jajanExpenses: unknown;
+  periodSettings: unknown;
+  journalText?: string;
+  status?: "error";
+  message?: string;
+};
+
 const periodStorageKey = "az-hub.period-settings";
 const savingsStorageKey = "az-hub.savings-goals";
+const savingsStorageVersionKey = "az-hub.savings-goals.version";
+const savingsStorageVersion = "2026-06-15-zero-defaults";
 const jajanStorageKey = "az-hub.jajan-expenses";
+const jajanStorageVersionKey = "az-hub.jajan-expenses.version";
+const jajanStorageVersion = "2026-06-15-empty-defaults";
 const dayMs = 24 * 60 * 60 * 1000;
 
 const inputClass =
-  "h-11 rounded-xl border border-black/10 bg-white px-3 text-sm text-[#1F2933] outline-none transition placeholder:text-slate-400 focus:border-[#2E7D5B] focus:ring-4 focus:ring-[#2E7D5B]/10";
+  "h-11 rounded-xl border border-black/10 bg-white px-3 text-sm text-[#1F2933] outline-none transition placeholder:text-slate-400 focus:border-[#2E7D5B] focus:ring-4 focus:ring-[#2E7D5B]/10 dark:border-white/10 dark:bg-white/10 dark:text-slate-100 dark:placeholder:text-slate-500";
 
-const initialJajanExpenses: JajanExpense[] = [
-  {
-    id: "kopi-sore",
-    title: "Kopi sore",
-    amount: 86000,
-    payer: "Berdua",
-    category: "Cafe",
-    date: "2026-06-14"
-  },
-  {
-    id: "martabak",
-    title: "Martabak date night",
-    amount: 124000,
-    payer: "Aryo",
-    category: "Snack",
-    date: "2026-06-13"
-  }
-];
+const legacySavingsCurrentById: Record<string, number> = {
+  wedding: 42650000,
+  emergency: 18400000
+};
+
+const legacyJajanExpenseIds = new Set(["kopi-sore", "martabak"]);
+const legacyJajanExpenseCount = 2;
+
+const initialJajanExpenses: JajanExpense[] = [];
 
 function parseLocalDate(value: string) {
   return new Date(`${value}T00:00:00`);
@@ -221,6 +226,93 @@ function buildMonthlyExpenseChart(expenses: JajanExpense[], today: Date) {
       total
     };
   });
+}
+
+function getProgress(current: number, target: number) {
+  if (target <= 0) {
+    return 0;
+  }
+
+  return Math.min(100, Math.round((current / target) * 100));
+}
+
+function normalizeSavingsGoals(value: unknown): SavingsGoal[] {
+  if (!Array.isArray(value)) {
+    return initialSavingsGoals;
+  }
+
+  return value
+    .map((goal) => {
+      if (!goal || typeof goal !== "object") {
+        return null;
+      }
+
+      const item = goal as Partial<SavingsGoal>;
+
+      return {
+        id: String(item.id ?? crypto.randomUUID()),
+        name: String(item.name ?? "").trim(),
+        current: Number(item.current) || 0,
+        target: Number(item.target) || 0,
+        monthlyChange: Number(item.monthlyChange) || 0
+      };
+    })
+    .filter((goal): goal is SavingsGoal => Boolean(goal?.id && goal.name));
+}
+
+function migrateSavingsGoals(goals: SavingsGoal[]) {
+  return goals.map((goal) => {
+    const legacyCurrent = legacySavingsCurrentById[goal.id];
+
+    if (legacyCurrent !== undefined && goal.current === legacyCurrent) {
+      return {
+        ...goal,
+        current: 0,
+        monthlyChange: 0
+      };
+    }
+
+    return goal;
+  });
+}
+
+function normalizeJajanExpenses(value: unknown): JajanExpense[] {
+  if (!Array.isArray(value)) {
+    return initialJajanExpenses;
+  }
+
+  return value
+    .map((expense) => {
+      if (!expense || typeof expense !== "object") {
+        return null;
+      }
+
+      const item = expense as Partial<JajanExpense>;
+      const payer =
+        item.payer === "Aryo" || item.payer === "Zhafia" || item.payer === "Berdua"
+          ? item.payer
+          : "Berdua";
+
+      return {
+        id: String(item.id ?? crypto.randomUUID()),
+        title: String(item.title ?? "").trim(),
+        amount: Number(item.amount) || 0,
+        payer,
+        category: String(item.category ?? "Jajan").trim() || "Jajan",
+        date: String(item.date ?? toDateInputValue(new Date()))
+      };
+    })
+    .filter((expense): expense is JajanExpense =>
+      Boolean(expense?.id && expense.title && expense.amount > 0)
+    );
+}
+
+function migrateJajanExpenses(expenses: JajanExpense[]) {
+  const isLegacyDefault =
+    expenses.length === legacyJajanExpenseCount &&
+    expenses.every((expense) => legacyJajanExpenseIds.has(expense.id));
+
+  return isLegacyDefault ? [] : expenses;
 }
 
 function MonthlyExpenseChart({
@@ -429,6 +521,8 @@ export function DashboardShell() {
     initialSavingsGoals
   );
   const [savingsLoaded, setSavingsLoaded] = useState(false);
+  const [dashboardStateLoaded, setDashboardStateLoaded] = useState(false);
+  const [dashboardStateAvailable, setDashboardStateAvailable] = useState(false);
   const [goalForm, setGoalForm] = useState<SavingsGoal>(createEmptyGoal);
   const [quotes, setQuotes] = useState<MarketQuote[]>([]);
   const [marketFlash, setMarketFlash] = useState<Record<string, "up" | "down">>(
@@ -482,9 +576,15 @@ export function DashboardShell() {
 
   useEffect(() => {
     const savedGoals = window.localStorage.getItem(savingsStorageKey);
+    const savedVersion = window.localStorage.getItem(savingsStorageVersionKey);
 
     if (savedGoals) {
-      setSavingsGoals(JSON.parse(savedGoals) as SavingsGoal[]);
+      const parsedGoals = normalizeSavingsGoals(JSON.parse(savedGoals));
+      setSavingsGoals(
+        savedVersion === savingsStorageVersion
+          ? parsedGoals
+          : migrateSavingsGoals(parsedGoals)
+      );
     }
 
     setSavingsLoaded(true);
@@ -493,14 +593,21 @@ export function DashboardShell() {
   useEffect(() => {
     if (savingsLoaded) {
       window.localStorage.setItem(savingsStorageKey, JSON.stringify(savingsGoals));
+      window.localStorage.setItem(savingsStorageVersionKey, savingsStorageVersion);
     }
   }, [savingsGoals, savingsLoaded]);
 
   useEffect(() => {
     const savedExpenses = window.localStorage.getItem(jajanStorageKey);
+    const savedVersion = window.localStorage.getItem(jajanStorageVersionKey);
 
     if (savedExpenses) {
-      setJajanExpenses(JSON.parse(savedExpenses) as JajanExpense[]);
+      const parsedExpenses = normalizeJajanExpenses(JSON.parse(savedExpenses));
+      setJajanExpenses(
+        savedVersion === jajanStorageVersion
+          ? parsedExpenses
+          : migrateJajanExpenses(parsedExpenses)
+      );
     }
 
     setJajanLoaded(true);
@@ -509,8 +616,120 @@ export function DashboardShell() {
   useEffect(() => {
     if (jajanLoaded) {
       window.localStorage.setItem(jajanStorageKey, JSON.stringify(jajanExpenses));
+      window.localStorage.setItem(jajanStorageVersionKey, jajanStorageVersion);
     }
   }, [jajanExpenses, jajanLoaded]);
+
+  useEffect(() => {
+    if (
+      !periodLoaded ||
+      !savingsLoaded ||
+      !jajanLoaded ||
+      dashboardStateLoaded
+    ) {
+      return;
+    }
+
+    let isMounted = true;
+
+    async function loadDashboardState() {
+      try {
+        const response = await fetch("/api/dashboard/state", { cache: "no-store" });
+        const data = (await response.json()) as DashboardStateResponse;
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (data.status === "error") {
+          setDashboardStateAvailable(false);
+          return;
+        }
+
+        setDashboardStateAvailable(true);
+
+        if (data.exists) {
+          setSavingsGoals(normalizeSavingsGoals(data.savingsGoals));
+          setJajanExpenses(normalizeJajanExpenses(data.jajanExpenses));
+          setPeriodSettings(
+            normalizePeriodSettings(data.periodSettings as Partial<PeriodSettings>)
+          );
+
+          if (typeof data.journalText === "string") {
+            setJournalText(data.journalText);
+          }
+        } else {
+          await fetch("/api/dashboard/state", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              savingsGoals,
+              jajanExpenses,
+              periodSettings,
+              journalText
+            })
+          });
+        }
+      } catch {
+        if (isMounted) {
+          setDashboardStateAvailable(false);
+        }
+      } finally {
+        if (isMounted) {
+          setDashboardStateLoaded(true);
+        }
+      }
+    }
+
+    loadDashboardState();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    dashboardStateLoaded,
+    jajanExpenses,
+    jajanLoaded,
+    journalText,
+    periodLoaded,
+    periodSettings,
+    savingsGoals,
+    savingsLoaded
+  ]);
+
+  useEffect(() => {
+    if (!dashboardStateLoaded || !dashboardStateAvailable) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      fetch("/api/dashboard/state", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          savingsGoals,
+          jajanExpenses,
+          periodSettings,
+          journalText
+        })
+      }).catch(() => {
+        setDashboardStateAvailable(false);
+      });
+    }, 600);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    dashboardStateAvailable,
+    dashboardStateLoaded,
+    jajanExpenses,
+    journalText,
+    periodSettings,
+    savingsGoals
+  ]);
 
   useEffect(() => {
     let isMounted = true;
@@ -679,6 +898,11 @@ export function DashboardShell() {
     [jajanExpenses]
   );
 
+  const totalJajan = useMemo(
+    () => jajanExpenses.reduce((sum, item) => sum + item.amount, 0),
+    [jajanExpenses]
+  );
+
   const cycleInfo = useMemo(
     () => getCycleInfo(periodSettings, today),
     [periodSettings, today]
@@ -693,7 +917,7 @@ export function DashboardShell() {
 
   const wealthProgress = Math.min(
     100,
-    totalTargets > 0 ? Math.round((totalSavings / totalTargets) * 100) : 0
+    getProgress(totalSavings, totalTargets)
   );
 
   const calendarCells = useMemo(
@@ -949,10 +1173,7 @@ export function DashboardShell() {
                 </div>
                 <div className="mt-6 space-y-3">
                   {savingsGoals.slice(0, 3).map((goal) => {
-                    const progress = Math.min(
-                      100,
-                      Math.round((goal.current / goal.target) * 100)
-                    );
+                    const progress = getProgress(goal.current, goal.target);
 
                     return (
                       <div key={goal.id} className="rounded-2xl bg-white p-4">
@@ -1547,10 +1768,7 @@ export function DashboardShell() {
 
             <div className="mt-6 space-y-4">
               {savingsGoals.map((goal) => {
-                const progress = Math.min(
-                  100,
-                  Math.round((goal.current / goal.target) * 100)
-                );
+                const progress = getProgress(goal.current, goal.target);
 
                 return (
                   <div key={goal.id} className="rounded-2xl border border-black/5 p-4">
@@ -1604,9 +1822,23 @@ export function DashboardShell() {
                 <Coffee size={18} />
                 Jajan Tracker
               </div>
-              <span className="rounded-full bg-[#F8FAF7] px-3 py-2 text-xs font-semibold text-slate-600">
-                Aryo {formatCurrency(aryoJajan)} | Zhafia {formatCurrency(zhafiaJajan)}
-              </span>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <span className="rounded-full bg-[#F8FAF7] px-3 py-2 text-xs font-semibold text-slate-600">
+                  Total {formatCurrency(totalJajan)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setJajanExpenses([])}
+                  disabled={jajanExpenses.length === 0}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-[#FF6B81]/10 px-3 text-xs font-semibold text-[#FF6B81] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Trash2 size={13} />
+                  Hapus semua
+                </button>
+              </div>
+            </div>
+            <div className="mt-3 text-xs font-semibold text-slate-500">
+              Aryo {formatCurrency(aryoJajan)} | Zhafia {formatCurrency(zhafiaJajan)}
             </div>
             <form
               onSubmit={handleExpenseSubmit}
@@ -1691,7 +1923,7 @@ export function DashboardShell() {
               {jajanExpenses.slice(0, 4).map((expense) => (
                 <div
                   key={expense.id}
-                  className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl bg-[#F8FAF7] p-3"
+                  className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 rounded-2xl bg-[#F8FAF7] p-3"
                 >
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#FF6B81]/10 text-[#FF6B81]">
                     <Coffee size={17} />
@@ -1708,6 +1940,18 @@ export function DashboardShell() {
                   <span className="text-sm font-semibold text-[#111827]">
                     {formatCurrency(expense.amount)}
                   </span>
+                  <button
+                    type="button"
+                    aria-label={`Hapus ${expense.title}`}
+                    onClick={() =>
+                      setJajanExpenses((expenses) =>
+                        expenses.filter((item) => item.id !== expense.id)
+                      )
+                    }
+                    className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#FF6B81] transition hover:-translate-y-0.5"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               ))}
             </div>

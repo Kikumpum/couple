@@ -46,6 +46,33 @@ Use Vercel Sensitive Environment Variables for API keys and database credentials
    npm run deploy:vercel
    ```
 
+## Railway PostgreSQL setup
+
+Railway can be used for the shared production database.
+
+1. Create a Railway project.
+2. Add a PostgreSQL database service.
+3. Copy the public PostgreSQL connection URL.
+4. Add it to Vercel as `DATABASE_URL`.
+5. Make sure the URL includes SSL when required by the provider, for example:
+   ```env
+   DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require"
+   ```
+6. After migrations exist in `prisma/migrations`, run:
+   ```bash
+   npm run prisma:migrate:deploy
+   ```
+
+The dashboard now has `/api/dashboard/state` for shared tabungan, jajan, period settings, and journal state. It uses the `DashboardState` table and falls back to browser `localStorage` if the database is not ready.
+
+After `DATABASE_URL` is set in Vercel, run the production migration before relying on sync:
+
+```bash
+npm run prisma:migrate:deploy
+```
+
+Portfolio preferences still use browser `localStorage`.
+
 ## Database migration in production
 
 Use this command for production/staging databases:

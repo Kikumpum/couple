@@ -21,6 +21,15 @@ type CryptoAsset = {
   imageUrl: string;
 };
 
+type CryptoCandle = {
+  openTime: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
 type Timeframe = "1h" | "1d" | "1w" | "1m" | "6m" | "1y";
 
 const assetImages: Record<string, string> = {
@@ -78,26 +87,48 @@ function getTimeframe(value: string | null): Timeframe {
     : "1h";
 }
 
-async function fetchChart(symbol: string, timeframe: Timeframe) {
+async function fetchCandles(symbol: string, timeframe: Timeframe) {
   const config = timeframeConfig[timeframe];
+  const mapRows = (data: unknown[]) =>
+    data
+      .map((row): CryptoCandle | null => {
+        if (!Array.isArray(row)) {
+          return null;
+        }
+
+        const open = toNumber(row[1]);
+        const high = toNumber(row[2]);
+        const low = toNumber(row[3]);
+        const close = toNumber(row[4]);
+
+        if (open <= 0 || high <= 0 || low <= 0 || close <= 0) {
+          return null;
+        }
+
+        return {
+          openTime: toNumber(row[0]),
+          open,
+          high,
+          low,
+          close,
+          volume: toNumber(row[5])
+        };
+      })
+      .filter((value): value is CryptoCandle => value !== null);
 
   try {
     const data = (await fetchJson(
       `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${config.interval}&limit=${config.limit}`
     )) as unknown[];
 
-    return data
-      .map((row) => (Array.isArray(row) ? toNumber(row[4]) : 0))
-      .filter((value) => value > 0);
+    return mapRows(data);
   } catch {
     try {
       const data = (await fetchJson(
         `https://data-api.binance.vision/api/v3/klines?symbol=${symbol}&interval=${config.interval}&limit=${config.limit}`
       )) as unknown[];
 
-      return data
-        .map((row) => (Array.isArray(row) ? toNumber(row[4]) : 0))
-        .filter((value) => value > 0);
+      return mapRows(data);
     } catch {
       return [];
     }
@@ -149,13 +180,15 @@ export async function GET(request: NextRequest) {
       .slice(0, 40);
 
     const prioritized = assets.find((item) => item.symbol === priority) ?? assets[0];
-    const chart = prioritized ? await fetchChart(prioritized.symbol, timeframe) : [];
+    const candles = prioritized ? await fetchCandles(prioritized.symbol, timeframe) : [];
+    const chart = candles.map((candle) => candle.close);
 
     return NextResponse.json(
       {
         assets,
         priority: prioritized,
         chart,
+        candles,
         timeframe,
         updatedAt: new Date().toISOString(),
         status: "live"
@@ -168,6 +201,7 @@ export async function GET(request: NextRequest) {
         assets: [],
         priority: null,
         chart: [],
+        candles: [],
         timeframe,
         updatedAt: new Date().toISOString(),
         status: "error",

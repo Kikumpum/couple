@@ -10,6 +10,26 @@ type StockAsset = {
 
 type Timeframe = "1h" | "1d" | "1w" | "1m" | "6m" | "1y";
 
+type StockChartPoint = {
+  time: number;
+  open: number | null;
+  high: number | null;
+  low: number | null;
+  close: number;
+  volume: number;
+};
+
+type StockStats = {
+  previousClose: number | null;
+  open: number | null;
+  volume: number | null;
+  dayLow: number | null;
+  dayHigh: number | null;
+  fiftyTwoWeekLow: number | null;
+  fiftyTwoWeekHigh: number | null;
+  averageVolume: number | null;
+};
+
 const stockMarkets: Record<"idx" | "us", StockAsset[]> = {
   idx: [
     { id: "jkse", symbol: "^JKSE", label: "IDX Composite", exchange: "idx", currency: "PTS" },
@@ -149,10 +169,37 @@ async function fetchYahooAsset(asset: StockAsset, timeframe: Timeframe) {
     const indicators = asRecord(firstResult?.indicators);
     const quoteList = Array.isArray(indicators?.quote) ? indicators.quote : [];
     const quote = asRecord(quoteList[0]);
+    const timestamps = Array.isArray(firstResult?.timestamp)
+      ? firstResult.timestamp.map(toNumber)
+      : [];
     const closeValues = Array.isArray(quote?.close)
       ? quote.close.map(toNumber).filter((value): value is number => value !== null)
       : [];
     const chartValues = config.slice ? closeValues.slice(-config.slice) : closeValues;
+    const openValues = Array.isArray(quote?.open) ? quote.open.map(toNumber) : [];
+    const highValues = Array.isArray(quote?.high) ? quote.high.map(toNumber) : [];
+    const lowValues = Array.isArray(quote?.low) ? quote.low.map(toNumber) : [];
+    const volumeValues = Array.isArray(quote?.volume) ? quote.volume.map(toNumber) : [];
+    const pointCount = closeValues.length;
+    const chartPoints = Array.from({ length: pointCount }, (_, index) => {
+      const close = closeValues[index];
+
+      if (close === undefined) {
+        return null;
+      }
+
+      return {
+        time: timestamps[index] ?? index,
+        open: openValues[index] ?? null,
+        high: highValues[index] ?? null,
+        low: lowValues[index] ?? null,
+        close,
+        volume: volumeValues[index] ?? 0
+      };
+    }).filter((point): point is StockChartPoint => point !== null);
+    const slicedChartPoints = config.slice
+      ? chartPoints.slice(-config.slice)
+      : chartPoints;
 
     const price = toNumber(meta?.regularMarketPrice);
     const previousClose = toNumber(
@@ -162,6 +209,16 @@ async function fetchYahooAsset(asset: StockAsset, timeframe: Timeframe) {
       price !== null && previousClose && previousClose > 0
         ? ((price - previousClose) / previousClose) * 100
         : null;
+    const stats: StockStats = {
+      previousClose,
+      open: toNumber(meta?.regularMarketOpen),
+      volume: toNumber(meta?.regularMarketVolume),
+      dayLow: toNumber(meta?.regularMarketDayLow),
+      dayHigh: toNumber(meta?.regularMarketDayHigh),
+      fiftyTwoWeekLow: toNumber(meta?.fiftyTwoWeekLow),
+      fiftyTwoWeekHigh: toNumber(meta?.fiftyTwoWeekHigh),
+      averageVolume: toNumber(meta?.averageDailyVolume3Month)
+    };
 
     return {
       ...asset,
@@ -169,6 +226,8 @@ async function fetchYahooAsset(asset: StockAsset, timeframe: Timeframe) {
       price,
       changePercent,
       chart: chartValues,
+      chartPoints: slicedChartPoints,
+      stats,
       source: "Yahoo Finance",
       status: price !== null ? "live" : "error"
     };
@@ -179,6 +238,17 @@ async function fetchYahooAsset(asset: StockAsset, timeframe: Timeframe) {
       price: null,
       changePercent: null,
       chart: [],
+      chartPoints: [],
+      stats: {
+        previousClose: null,
+        open: null,
+        volume: null,
+        dayLow: null,
+        dayHigh: null,
+        fiftyTwoWeekLow: null,
+        fiftyTwoWeekHigh: null,
+        averageVolume: null
+      },
       source: "Yahoo Finance",
       status: "error"
     };
@@ -220,6 +290,7 @@ export async function GET(request: NextRequest) {
       markets: mergedMarkets,
       priority: prioritized,
       chart: prioritized?.chart ?? [],
+      chartPoints: prioritized?.chartPoints ?? [],
       timeframe,
       updatedAt: new Date().toISOString(),
       status: mergedMarkets.some((item) => item.status === "live") ? "live" : "error"

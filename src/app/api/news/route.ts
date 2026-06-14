@@ -11,12 +11,25 @@ type NewsArticle = {
   publishedAt?: string;
 };
 
+function newsSearchUrl(query: string, region: "ID" | "US" = "ID") {
+  const url = new URL("https://news.google.com/search");
+  url.searchParams.set("q", query);
+  url.searchParams.set("hl", region === "ID" ? "id-ID" : "en-US");
+  url.searchParams.set("gl", region);
+  url.searchParams.set("ceid", `${region}:${region === "ID" ? "id" : "en"}`);
+
+  return url.toString();
+}
+
 const fallbackGlobalHeadlines = [
   {
     id: "fallback-global-markets",
     title: "US business headlines track rates, earnings, and market momentum",
     source: "Placeholder",
-    url: "https://newsapi.org/",
+    url: newsSearchUrl(
+      "US business headlines rates earnings market momentum",
+      "US"
+    ),
     imageUrl: null,
     publishedAt: new Date().toISOString()
   },
@@ -24,7 +37,7 @@ const fallbackGlobalHeadlines = [
     id: "fallback-global-tech",
     title: "Technology earnings remain a key driver for global equity sentiment",
     source: "Placeholder",
-    url: "https://newsapi.org/",
+    url: newsSearchUrl("technology earnings global equity sentiment", "US"),
     imageUrl: null,
     publishedAt: new Date().toISOString()
   },
@@ -32,7 +45,7 @@ const fallbackGlobalHeadlines = [
     id: "fallback-global-banks",
     title: "Banking and consumer data shape the latest business outlook",
     source: "Placeholder",
-    url: "https://newsapi.org/",
+    url: newsSearchUrl("banking consumer data business outlook", "US"),
     imageUrl: null,
     publishedAt: new Date().toISOString()
   }
@@ -43,7 +56,7 @@ const fallbackIndonesiaHeadlines = [
     id: "fallback-id-market",
     title: "Berita Indonesia memantau IHSG, rupiah, dan emiten utama",
     source: "Placeholder",
-    url: "https://newsapi.org/",
+    url: newsSearchUrl("IHSG rupiah emiten utama"),
     imageUrl: null,
     publishedAt: new Date().toISOString()
   },
@@ -51,7 +64,7 @@ const fallbackIndonesiaHeadlines = [
     id: "fallback-id-policy",
     title: "Kebijakan ekonomi domestik menjadi perhatian pelaku pasar",
     source: "Placeholder",
-    url: "https://newsapi.org/",
+    url: newsSearchUrl("kebijakan ekonomi domestik pelaku pasar"),
     imageUrl: null,
     publishedAt: new Date().toISOString()
   },
@@ -59,21 +72,26 @@ const fallbackIndonesiaHeadlines = [
     id: "fallback-id-business",
     title: "Sektor perbankan, komoditas, dan teknologi lokal tetap dipantau",
     source: "Placeholder",
-    url: "https://newsapi.org/",
+    url: newsSearchUrl("perbankan komoditas teknologi lokal Indonesia"),
     imageUrl: null,
     publishedAt: new Date().toISOString()
   }
 ];
 
 function mapArticles(articles: NewsArticle[], prefix: string) {
-  return articles.slice(0, 5).map((article, index) => ({
-    id: `${prefix}-${article.source?.name ?? "news"}-${index}`,
-    title: article.title ?? "Untitled headline",
-    source: article.source?.name ?? "NewsAPI",
-    url: article.url ?? "https://newsapi.org/",
-    imageUrl: article.urlToImage ?? null,
-    publishedAt: article.publishedAt ?? new Date().toISOString()
-  }));
+  return articles.slice(0, 5).map((article, index) => {
+    const title = article.title ?? "Untitled headline";
+    const directUrl = article.url?.startsWith("http") ? article.url : null;
+
+    return {
+      id: `${prefix}-${article.source?.name ?? "news"}-${index}`,
+      title,
+      source: article.source?.name ?? "NewsAPI",
+      url: directUrl ?? newsSearchUrl(title, prefix === "id" ? "ID" : "US"),
+      imageUrl: article.urlToImage ?? null,
+      publishedAt: article.publishedAt ?? new Date().toISOString()
+    };
+  });
 }
 
 function fallbackNews(message: string) {

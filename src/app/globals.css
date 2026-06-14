@@ -37,6 +37,36 @@ button {
   cursor: pointer;
 }
 
+main.dark {
+  color-scheme: dark;
+}
+
+main.dark .text-\[\#111827\],
+main.dark .text-\[\#1F2933\] {
+  color: #f8fafc !important;
+}
+
+main.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+main.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+main.dark .bg-white {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+main.dark .bg-\[\#F8FAF7\] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+main.dark .border-black\/5,
+main.dark .border-black\/10 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
 .portfolio-aurora {
   background:
     radial-gradient(circle at 18% 12%, rgba(168, 85, 247, 0.24), transparent 30%),
