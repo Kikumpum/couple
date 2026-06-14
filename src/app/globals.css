@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  background: #f8faf7;
+}
+
+html {
+  min-height: 100%;
+  background: #f8faf7;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #f8faf7;
+  color: #1f2933;
+  font-feature-settings:
+    "cv02" 1,
+    "cv03" 1,
+    "cv04" 1;
+  text-rendering: geometricPrecision;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+.portfolio-aurora {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(168, 85, 247, 0.24), transparent 30%),
+    radial-gradient(circle at 68% 8%, rgba(59, 130, 246, 0.22), transparent 28%),
+    radial-gradient(circle at 88% 36%, rgba(236, 72, 153, 0.16), transparent 24%),
+    linear-gradient(180deg, #050816 0%, #070a1f 48%, #050816 100%);
+  animation: portfolio-drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes portfolio-drift {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+    filter: saturate(1);
+  }
+
+  to {
+    transform: scale(1.04) translate3d(-18px, 14px, 0);
+    filter: saturate(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
