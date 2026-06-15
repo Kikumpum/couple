@@ -32,10 +32,28 @@ type StockStats = {
 
 const stockMarkets: Record<"idx" | "us", StockAsset[]> = {
   idx: [
+    { id: "bmri", symbol: "BMRI.JK", label: "Bank Mandiri", exchange: "idx", currency: "IDR" },
+    { id: "padi", symbol: "PADI.JK", label: "Minna Padi Investama Sekuritas", exchange: "idx", currency: "IDR" },
+    { id: "true", symbol: "TRUE.JK", label: "Triniti Dinamik", exchange: "idx", currency: "IDR" },
+    { id: "elty", symbol: "ELTY.JK", label: "Bakrieland Development", exchange: "idx", currency: "IDR" },
+    { id: "esti", symbol: "ESTI.JK", label: "Ever Shine Tex", exchange: "idx", currency: "IDR" },
+    { id: "inet", symbol: "INET.JK", label: "Sinergi Inti Andalan Prima", exchange: "idx", currency: "IDR" },
+    { id: "rlco", symbol: "RLCO.JK", label: "Royalindo Investa Wijaya", exchange: "idx", currency: "IDR" },
+    { id: "antm", symbol: "ANTM.JK", label: "Aneka Tambang", exchange: "idx", currency: "IDR" },
+    { id: "bumi", symbol: "BUMI.JK", label: "Bumi Resources", exchange: "idx", currency: "IDR" },
+    { id: "mina", symbol: "MINA.JK", label: "Sanurhasta Mitra", exchange: "idx", currency: "IDR" },
+    { id: "futr", symbol: "FUTR.JK", label: "Lini Imaji Kreasi Ekosistem", exchange: "idx", currency: "IDR" },
+    { id: "ratu", symbol: "RATU.JK", label: "Raharja Energi Cepu", exchange: "idx", currency: "IDR" },
+    { id: "tris", symbol: "TRIS.JK", label: "Trisula International", exchange: "idx", currency: "IDR" },
+    { id: "ctra", symbol: "CTRA.JK", label: "Ciputra Development", exchange: "idx", currency: "IDR" },
+    { id: "bell", symbol: "BELL.JK", label: "Trisula Textile Industries", exchange: "idx", currency: "IDR" },
+    { id: "bipi", symbol: "BIPI.JK", label: "Astrindo Nusantara Infrastruktur", exchange: "idx", currency: "IDR" },
+    { id: "cuan", symbol: "CUAN.JK", label: "Petrindo Jaya Kreasi", exchange: "idx", currency: "IDR" },
+    { id: "mbma", symbol: "MBMA.JK", label: "Merdeka Battery Materials", exchange: "idx", currency: "IDR" },
+    { id: "dada", symbol: "DADA.JK", label: "Diamond Citra Propertindo", exchange: "idx", currency: "IDR" },
     { id: "jkse", symbol: "^JKSE", label: "IDX Composite", exchange: "idx", currency: "PTS" },
     { id: "bbca", symbol: "BBCA.JK", label: "Bank Central Asia", exchange: "idx", currency: "IDR" },
     { id: "bbri", symbol: "BBRI.JK", label: "Bank Rakyat Indonesia", exchange: "idx", currency: "IDR" },
-    { id: "bmri", symbol: "BMRI.JK", label: "Bank Mandiri", exchange: "idx", currency: "IDR" },
     { id: "tlkm", symbol: "TLKM.JK", label: "Telkom Indonesia", exchange: "idx", currency: "IDR" },
     { id: "asii", symbol: "ASII.JK", label: "Astra International", exchange: "idx", currency: "IDR" },
     { id: "unvr", symbol: "UNVR.JK", label: "Unilever Indonesia", exchange: "idx", currency: "IDR" },
@@ -298,7 +316,7 @@ async function fetchYahooAsset(asset: StockAsset, timeframe: Timeframe) {
 export async function GET(request: NextRequest) {
   const exchange =
     request.nextUrl.searchParams.get("exchange") === "us" ? "us" : "idx";
-  const fallbackPriority = exchange === "idx" ? "^JKSE" : "^GSPC";
+  const fallbackPriority = exchange === "idx" ? "BMRI.JK" : "^GSPC";
   const priority = normalizePrioritySymbol(
     request.nextUrl.searchParams.get("priority") ?? fallbackPriority,
     exchange

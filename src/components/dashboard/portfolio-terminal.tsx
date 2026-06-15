@@ -24,6 +24,23 @@ type Mode = "crypto" | "stocks";
 type StockExchange = "idx" | "us";
 type Timeframe = "1h" | "1d" | "1w" | "1m" | "6m" | "1y";
 
+type OwnerHolding = {
+  symbol: string;
+  label: string;
+  account?: string;
+  lots?: number;
+  shares?: number;
+  avgPrice?: number;
+  invested: number;
+  pnl: number;
+};
+
+type OwnerPortfolio = {
+  owner: "Aryo" | "Fia";
+  accent: "sky" | "rose";
+  holdings: OwnerHolding[];
+};
+
 type CryptoAsset = {
   id: string;
   symbol: string;
@@ -137,6 +154,240 @@ const timeframeOptions: Array<{ value: Timeframe; label: string }> = [
   { value: "1y", label: "1Thn" }
 ];
 
+const ownerPortfolios: OwnerPortfolio[] = [
+  {
+    owner: "Aryo",
+    accent: "sky",
+    holdings: [
+      {
+        symbol: "ELTY",
+        label: "Bakrieland Development",
+        account: "Aryo akun 2",
+        lots: 1279,
+        shares: 127900,
+        avgPrice: 99.14,
+        invested: 12681093,
+        pnl: -9099893
+      },
+      {
+        symbol: "ESTI",
+        label: "Ever Shine Tex",
+        account: "Aryo Stockbit 1",
+        invested: 10635930,
+        pnl: -5821530
+      },
+      {
+        symbol: "INET",
+        label: "Sinergi Inti Andalan Prima",
+        account: "Aryo Stockbit 1",
+        invested: 10350502,
+        pnl: -6947903
+      },
+      {
+        symbol: "BMRI",
+        label: "Bank Mandiri",
+        account: "Aryo akun 2",
+        lots: 21,
+        shares: 2100,
+        avgPrice: 4687.02,
+        invested: 9842742,
+        pnl: -392742
+      },
+      {
+        symbol: "RLCO",
+        label: "Royalindo Investa Wijaya",
+        account: "Aryo akun 2",
+        lots: 12,
+        shares: 1200,
+        avgPrice: 7905.59,
+        invested: 9486709,
+        pnl: -5286709
+      },
+      {
+        symbol: "ANTM",
+        label: "Aneka Tambang",
+        account: "Aryo Stockbit 1",
+        invested: 6940395,
+        pnl: 11605
+      },
+      {
+        symbol: "BUMI",
+        label: "Bumi Resources",
+        account: "Aryo Stockbit 1",
+        invested: 4983664,
+        pnl: -1654264
+      },
+      {
+        symbol: "MINA",
+        label: "Sanurhasta Mitra",
+        account: "Aryo akun 2",
+        lots: 92,
+        shares: 9200,
+        avgPrice: 458.68,
+        invested: 4219920,
+        pnl: -1478320
+      },
+      {
+        symbol: "FUTR",
+        label: "Lini Imaji Kreasi Ekosistem",
+        account: "Aryo Stockbit 1",
+        invested: 3393082,
+        pnl: -1490082
+      },
+      {
+        symbol: "RATU",
+        label: "Raharja Energi Cepu",
+        account: "Aryo akun 2",
+        lots: 2,
+        shares: 200,
+        avgPrice: 8963.42,
+        invested: 1792685,
+        pnl: -814685
+      },
+      {
+        symbol: "BMRI",
+        label: "Bank Mandiri",
+        account: "Aryo Stockbit 1",
+        invested: 1403101,
+        pnl: -83102
+      },
+      {
+        symbol: "PADI",
+        label: "Minna Padi Investama Sekuritas",
+        account: "Aryo akun 2",
+        lots: 36,
+        shares: 3600,
+        avgPrice: 126.18,
+        invested: 454280,
+        pnl: -173480
+      },
+      {
+        symbol: "CUAN",
+        label: "Petrindo Jaya Kreasi",
+        account: "Aryo akun 2",
+        lots: 3,
+        shares: 300,
+        avgPrice: 691.03,
+        invested: 207311,
+        pnl: 16190
+      },
+      {
+        symbol: "BUMI",
+        label: "Bumi Resources",
+        account: "Aryo akun 2",
+        lots: 2,
+        shares: 200,
+        avgPrice: 382.57,
+        invested: 76515,
+        pnl: -41915
+      },
+      {
+        symbol: "CUAN",
+        label: "Petrindo Jaya Kreasi",
+        account: "Aryo Stockbit 1",
+        invested: 66599,
+        pnl: 11400
+      }
+    ]
+  },
+  {
+    owner: "Fia",
+    accent: "rose",
+    holdings: [
+      {
+        symbol: "TRUE",
+        label: "Triniti Dinamik",
+        account: "Fia",
+        lots: 358,
+        shares: 35800,
+        avgPrice: 530.79,
+        invested: 19002461,
+        pnl: -16496461
+      },
+      {
+        symbol: "BMRI",
+        label: "Bank Mandiri",
+        account: "Fia",
+        lots: 3,
+        shares: 300,
+        avgPrice: 4636.94,
+        invested: 1391083,
+        pnl: -41083
+      },
+      {
+        symbol: "TRIS",
+        label: "Trisula International",
+        account: "Fia",
+        lots: 27,
+        shares: 2700,
+        avgPrice: 248.37,
+        invested: 670604,
+        pnl: -217004
+      },
+      {
+        symbol: "CTRA",
+        label: "Ciputra Development",
+        account: "Fia",
+        lots: 7,
+        shares: 700,
+        avgPrice: 911.36,
+        invested: 637955,
+        pnl: -228455
+      },
+      {
+        symbol: "BELL",
+        label: "Trisula Textile Industries",
+        account: "Fia",
+        lots: 18,
+        shares: 1800,
+        avgPrice: 248.37,
+        invested: 447069,
+        pnl: -254469
+      },
+      {
+        symbol: "BIPI",
+        label: "Astrindo Nusantara Infrastruktur",
+        account: "Fia",
+        lots: 17,
+        shares: 1700,
+        avgPrice: 171.25,
+        invested: 291136,
+        pnl: -12336
+      },
+      {
+        symbol: "PADI",
+        label: "Minna Padi Investama Sekuritas",
+        account: "Fia",
+        lots: 12,
+        shares: 1200,
+        avgPrice: 177.26,
+        invested: 212718,
+        pnl: -119118
+      },
+      {
+        symbol: "MBMA",
+        label: "Merdeka Battery Materials",
+        account: "Fia",
+        lots: 3,
+        shares: 300,
+        avgPrice: 600.9,
+        invested: 180270,
+        pnl: -27270
+      },
+      {
+        symbol: "DADA",
+        label: "Diamond Citra Propertindo",
+        account: "Fia",
+        lots: 2,
+        shares: 200,
+        avgPrice: 66.09,
+        invested: 13219,
+        pnl: -3219
+      }
+    ]
+  }
+];
+
 function formatNumber(value: number | null, currency: string) {
   if (value === null) {
     return "Belum aktif";
@@ -153,6 +404,69 @@ function formatNumber(value: number | null, currency: string) {
     currency,
     maximumFractionDigits: value > 100 ? 2 : 4
   }).format(value);
+}
+
+function formatRupiah(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0
+  }).format(value);
+}
+
+function formatSignedRupiah(value: number) {
+  const sign = value > 0 ? "+" : "";
+
+  return `${sign}${formatRupiah(value)}`;
+}
+
+function livePriceForHolding(markets: StockMarket[], holding: OwnerHolding) {
+  const yahooSymbol = toYahooIdxSymbol(holding.symbol);
+  const market = markets.find((item) => item.symbol === yahooSymbol);
+
+  return market?.price ?? null;
+}
+
+function holdingMarketValue(holding: OwnerHolding, livePrice?: number | null) {
+  if (holding.shares && livePrice && livePrice > 0) {
+    return holding.shares * livePrice;
+  }
+
+  return holding.invested + holding.pnl;
+}
+
+function holdingPnl(holding: OwnerHolding, livePrice?: number | null) {
+  return holdingMarketValue(holding, livePrice) - holding.invested;
+}
+
+function holdingPercent(holding: OwnerHolding, livePrice?: number | null) {
+  return holding.invested > 0 ? (holdingPnl(holding, livePrice) / holding.invested) * 100 : 0;
+}
+
+function portfolioSummary(
+  holdings: OwnerHolding[],
+  markets: StockMarket[] = []
+) {
+  const invested = holdings.reduce((sum, holding) => sum + holding.invested, 0);
+  const marketValue = holdings.reduce((sum, holding) => {
+    const livePrice = livePriceForHolding(markets, holding);
+
+    return sum + holdingMarketValue(holding, livePrice);
+  }, 0);
+  const pnl = marketValue - invested;
+  const percentage = invested > 0 ? (pnl / invested) * 100 : 0;
+
+  return { invested, pnl, marketValue, percentage };
+}
+
+function hasLiveHoldingValue(holding: OwnerHolding, markets: StockMarket[]) {
+  const livePrice = livePriceForHolding(markets, holding);
+
+  return Boolean(holding.shares && livePrice && livePrice > 0);
+}
+
+function toYahooIdxSymbol(symbol: string) {
+  return `${symbol}.JK`;
 }
 
 function formatVolume(value: number) {
@@ -318,6 +632,321 @@ function StockLogo({
         />
       )}
     </span>
+  );
+}
+
+function logoForHolding(markets: StockMarket[], holding: OwnerHolding) {
+  const yahooSymbol = toYahooIdxSymbol(holding.symbol);
+  const market = markets.find((item) => item.symbol === yahooSymbol);
+
+  return market?.imageUrl ?? (holding.symbol === "BMRI" ? "/logos/bmri.svg" : "/idx.png");
+}
+
+function OwnerPortfolioPanel({
+  portfolio,
+  markets,
+  activeSymbol,
+  onSelect
+}: {
+  portfolio: OwnerPortfolio;
+  markets: StockMarket[];
+  activeSymbol: string;
+  onSelect: (symbol: string, label: string) => void;
+}) {
+  const summary = portfolioSummary(portfolio.holdings, markets);
+  const isPositive = summary.pnl >= 0;
+  const accentClass =
+    portfolio.accent === "sky"
+      ? "border-sky-300/20 bg-sky-300/10 text-sky-100"
+      : "border-rose-300/20 bg-rose-300/10 text-rose-100";
+
+  return (
+    <div className="rounded-[24px] border border-white/10 bg-white/[0.055] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-purple-200">Portofolio</p>
+          <h2 className="mt-2 text-2xl font-semibold">{portfolio.owner}</h2>
+        </div>
+        <span
+          className={`inline-flex h-9 items-center rounded-2xl border px-3 text-xs font-semibold ${accentClass}`}
+        >
+          {portfolio.holdings.length} emiten
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
+          <p className="text-xs font-semibold uppercase text-white/45">Invested</p>
+          <p className="mt-2 text-sm font-semibold">{formatRupiah(summary.invested)}</p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
+          <p className="text-xs font-semibold uppercase text-white/45">Market value</p>
+          <p className="mt-2 text-sm font-semibold">{formatRupiah(summary.marketValue)}</p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
+          <p className="text-xs font-semibold uppercase text-white/45">P/L</p>
+          <p
+            className={`mt-2 text-sm font-semibold ${
+              isPositive ? "text-emerald-300" : "text-rose-300"
+            }`}
+          >
+            {formatSignedRupiah(summary.pnl)}
+          </p>
+          <p
+            className={`mt-1 text-xs font-semibold ${
+              isPositive ? "text-emerald-300/80" : "text-rose-300/80"
+            }`}
+          >
+            {summary.percentage >= 0 ? "+" : ""}
+            {summary.percentage.toFixed(2)}%
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid max-h-[520px] gap-3 overflow-y-auto pr-1">
+        {portfolio.holdings.map((holding) => {
+          const yahooSymbol = toYahooIdxSymbol(holding.symbol);
+          const active = activeSymbol === yahooSymbol;
+          const livePrice = livePriceForHolding(markets, holding);
+          const marketValue = holdingMarketValue(holding, livePrice);
+          const pnl = holdingPnl(holding, livePrice);
+          const percent = holdingPercent(holding, livePrice);
+          const positive = pnl >= 0;
+          const liveValue = hasLiveHoldingValue(holding, markets);
+
+          return (
+            <button
+              key={`${portfolio.owner}-${holding.account ?? "main"}-${holding.symbol}`}
+              type="button"
+              onClick={() => onSelect(yahooSymbol, holding.label)}
+              className={`grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[18px] border p-3 text-left transition ${
+                active
+                  ? "border-white/20 bg-white text-[#050816] shadow-[0_18px_60px_rgba(255,255,255,0.1)]"
+                  : "border-white/10 bg-white/8 text-white hover:-translate-y-0.5 hover:bg-white/12"
+              }`}
+            >
+              <StockLogo
+                src={logoForHolding(markets, holding)}
+                alt={holding.label}
+                symbol={yahooSymbol}
+                className="h-10 w-10 rounded-xl"
+              />
+              <span className="min-w-0">
+                <span className="flex items-center gap-2">
+                  <span className="truncate text-sm font-semibold">{holding.symbol}</span>
+                  {active ? <Check size={14} /> : null}
+                </span>
+                <span
+                  className={`mt-1 block truncate text-xs ${
+                    active ? "text-slate-500" : "text-white/45"
+                  }`}
+                >
+                  {holding.account ?? holding.label}
+                </span>
+                <span
+                  className={`mt-2 block text-xs font-semibold ${
+                    active ? "text-slate-600" : "text-white/52"
+                  }`}
+                >
+                  {formatRupiah(holding.invested)}
+                  {" -> "}
+                  {formatRupiah(marketValue)}
+                </span>
+                <span
+                  className={`mt-1 block text-[11px] font-semibold ${
+                    liveValue
+                      ? active
+                        ? "text-emerald-700"
+                        : "text-emerald-200/80"
+                      : active
+                        ? "text-slate-500"
+                        : "text-white/38"
+                  }`}
+                >
+                  {holding.shares
+                    ? `${holding.lots ?? holding.shares / 100} lot | Avg ${formatCompact(
+                        holding.avgPrice ?? null,
+                        "IDR"
+                      )} | ${liveValue ? "live" : "snapshot"}`
+                    : "snapshot Stockbit"}
+                </span>
+              </span>
+              <span className="text-right">
+                <span
+                  className={`block text-sm font-semibold ${
+                    positive
+                      ? active
+                        ? "text-emerald-700"
+                        : "text-emerald-300"
+                      : active
+                        ? "text-rose-600"
+                        : "text-rose-300"
+                  }`}
+                >
+                  {formatSignedRupiah(pnl)}
+                </span>
+                <span
+                  className={`mt-1 block text-xs font-semibold ${
+                    positive
+                      ? active
+                        ? "text-emerald-700"
+                        : "text-emerald-300/80"
+                      : active
+                        ? "text-rose-600"
+                        : "text-rose-300/80"
+                  }`}
+                >
+                  {percent >= 0 ? "+" : ""}
+                  {percent.toFixed(2)}%
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SharedPortfolioPanel({
+  markets,
+  activeSymbol,
+  onSelect
+}: {
+  markets: StockMarket[];
+  activeSymbol: string;
+  onSelect: (symbol: string, label: string) => void;
+}) {
+  const [aryoPortfolio, fiaPortfolio] = ownerPortfolios;
+  const sharedSymbols = Array.from(
+    new Set(
+      aryoPortfolio.holdings
+        .map((holding) => holding.symbol)
+        .filter((symbol) =>
+          fiaPortfolio.holdings.some((holding) => holding.symbol === symbol)
+        )
+    )
+  );
+  const sharedRows = sharedSymbols.map((symbol) => {
+    const aryoEntries = aryoPortfolio.holdings.filter((holding) => holding.symbol === symbol);
+    const fiaEntries = fiaPortfolio.holdings.filter((holding) => holding.symbol === symbol);
+    const allEntries = [...aryoEntries, ...fiaEntries];
+    const invested = allEntries.reduce((sum, holding) => sum + holding.invested, 0);
+    const marketValue = allEntries.reduce((sum, holding) => {
+      const livePrice = livePriceForHolding(markets, holding);
+
+      return sum + holdingMarketValue(holding, livePrice);
+    }, 0);
+    const pnl = marketValue - invested;
+
+    return {
+      symbol,
+      label: allEntries[0]?.label ?? symbol,
+      aryoInvested: aryoEntries.reduce((sum, holding) => sum + holding.invested, 0),
+      fiaInvested: fiaEntries.reduce((sum, holding) => sum + holding.invested, 0),
+      invested,
+      marketValue,
+      pnl,
+      liveEntries: allEntries.filter((holding) => hasLiveHoldingValue(holding, markets)).length,
+      totalEntries: allEntries.length
+    };
+  });
+  const sharedSummaryHoldings = sharedSymbols.flatMap((symbol) => {
+    return [
+      ...aryoPortfolio.holdings.filter((holding) => holding.symbol === symbol),
+      ...fiaPortfolio.holdings.filter((holding) => holding.symbol === symbol)
+    ];
+  });
+  const summary = portfolioSummary(sharedSummaryHoldings, markets);
+
+  return (
+    <div className="rounded-[24px] border border-white/10 bg-white/[0.055] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-purple-200">Dimiliki berdua</p>
+          <h2 className="mt-2 text-2xl font-semibold">BMRI dan PADI</h2>
+        </div>
+        <div className="grid gap-2 text-sm font-semibold sm:grid-cols-3 lg:min-w-[560px]">
+          <span className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3">
+            Invested {formatRupiah(summary.invested)}
+          </span>
+          <span className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3">
+            Value {formatRupiah(summary.marketValue)}
+          </span>
+          <span className="rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-rose-200">
+            P/L {formatSignedRupiah(summary.pnl)}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        {sharedRows.map((holding) => {
+          const yahooSymbol = toYahooIdxSymbol(holding.symbol);
+          const active = activeSymbol === yahooSymbol;
+
+          return (
+            <button
+              key={`shared-${holding.symbol}`}
+              type="button"
+              onClick={() => onSelect(yahooSymbol, holding.label)}
+              className={`grid grid-cols-[auto_1fr] gap-4 rounded-[20px] border p-4 text-left transition ${
+                active
+                  ? "border-white/20 bg-white text-[#050816]"
+                  : "border-white/10 bg-white/8 text-white hover:-translate-y-0.5 hover:bg-white/12"
+              }`}
+            >
+              <StockLogo
+                src={logoForHolding(markets, holding)}
+                alt={holding.label}
+                symbol={yahooSymbol}
+              />
+              <span className="min-w-0">
+                <span className="flex items-center justify-between gap-3">
+                  <span className="text-base font-semibold">{holding.symbol}</span>
+                  <span
+                    className={`text-sm font-semibold ${
+                      active ? "text-rose-600" : "text-rose-300"
+                    }`}
+                  >
+                    {formatSignedRupiah(holding.pnl)}
+                  </span>
+                </span>
+                <span
+                  className={`mt-1 block truncate text-xs ${
+                    active ? "text-slate-500" : "text-white/45"
+                  }`}
+                >
+                  {holding.label}
+                </span>
+                <span className="mt-4 grid gap-2 text-xs font-semibold sm:grid-cols-2">
+                  <span
+                    className={`rounded-xl px-3 py-2 ${
+                      active ? "bg-slate-100 text-slate-600" : "bg-white/8 text-white/58"
+                    }`}
+                  >
+                    Aryo {formatRupiah(holding.aryoInvested)}
+                  </span>
+                  <span
+                    className={`rounded-xl px-3 py-2 ${
+                      active ? "bg-slate-100 text-slate-600" : "bg-white/8 text-white/58"
+                    }`}
+                  >
+                    Fia {formatRupiah(holding.fiaInvested)}
+                  </span>
+                </span>
+                <span
+                  className={`mt-2 block text-xs font-semibold ${
+                    active ? "text-slate-500" : "text-white/42"
+                  }`}
+                >
+                  {holding.liveEntries}/{holding.totalEntries} posisi pakai harga live
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -769,12 +1398,12 @@ function BinanceCryptoChart({
 }
 
 export function PortfolioTerminal() {
-  const [mode, setMode] = useState<Mode>("crypto");
+  const [mode, setMode] = useState<Mode>("stocks");
   const [stockExchange, setStockExchange] = useState<StockExchange>("idx");
   const [timeframe, setTimeframe] = useState<Timeframe>("1h");
   const [cryptoPriority, setCryptoPriority] = useState("BTCUSDT");
-  const [stockPriority, setStockPriority] = useState("^JKSE");
-  const [selectedStockLabel, setSelectedStockLabel] = useState("");
+  const [stockPriority, setStockPriority] = useState("BMRI.JK");
+  const [selectedStockLabel, setSelectedStockLabel] = useState("Bank Mandiri");
   const [cryptoData, setCryptoData] = useState<CryptoResponse | null>(null);
   const [stocksData, setStocksData] = useState<StocksResponse | null>(null);
   const [stockSearchResults, setStockSearchResults] = useState<StockSearchResult[]>(
@@ -789,24 +1418,29 @@ export function PortfolioTerminal() {
     const savedStock = window.localStorage.getItem(stockPriorityKey);
     const savedStockLabel = window.localStorage.getItem(stockLabelKey);
     const savedExchange = window.localStorage.getItem(stockExchangeKey);
+    const savedStockExchange =
+      savedExchange === "idx" || savedExchange === "us" ? savedExchange : "idx";
+    const shouldMigrateOldIdxDefault =
+      savedStockExchange === "idx" && savedStock === "^JKSE";
 
     if (savedCrypto) {
       setCryptoPriority(savedCrypto);
     }
 
-    if (savedStock) {
+    if (savedStock && !shouldMigrateOldIdxDefault) {
       setStockPriority(savedStock);
+    } else {
+      setStockPriority(savedStockExchange === "idx" ? "BMRI.JK" : "^GSPC");
     }
 
-    if (savedStockLabel) {
+    if (savedStockLabel && !shouldMigrateOldIdxDefault) {
       setSelectedStockLabel(savedStockLabel);
+    } else {
+      setSelectedStockLabel(savedStockExchange === "idx" ? "Bank Mandiri" : "S&P 500");
     }
 
     if (savedExchange === "idx" || savedExchange === "us") {
       setStockExchange(savedExchange);
-      if (!savedStock) {
-        setStockPriority(savedExchange === "idx" ? "^JKSE" : "^GSPC");
-      }
     }
   }, []);
 
@@ -1008,8 +1642,8 @@ export function PortfolioTerminal() {
 
   function changeExchange(nextExchange: StockExchange) {
     setStockExchange(nextExchange);
-    setStockPriority(nextExchange === "idx" ? "^JKSE" : "^GSPC");
-    setSelectedStockLabel(nextExchange === "idx" ? "IDX Composite" : "S&P 500");
+    setStockPriority(nextExchange === "idx" ? "BMRI.JK" : "^GSPC");
+    setSelectedStockLabel(nextExchange === "idx" ? "Bank Mandiri" : "S&P 500");
     setStockSearchResults([]);
     setStockSearchStatus("");
     setQuery("");
@@ -1220,6 +1854,27 @@ export function PortfolioTerminal() {
             </div>
           </div>
         </section>
+
+        {mode === "stocks" ? (
+          <section className="grid gap-6">
+            <SharedPortfolioPanel
+              markets={stockMarkets}
+              activeSymbol={stockPriority}
+              onSelect={selectStock}
+            />
+            <div className="grid gap-6 xl:grid-cols-2">
+              {ownerPortfolios.map((portfolio) => (
+                <OwnerPortfolioPanel
+                  key={portfolio.owner}
+                  portfolio={portfolio}
+                  markets={stockMarkets}
+                  activeSymbol={stockPriority}
+                  onSelect={selectStock}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-[24px] border border-white/10 bg-white/[0.055] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl">

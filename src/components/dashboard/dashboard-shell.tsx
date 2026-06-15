@@ -1210,7 +1210,7 @@ export function DashboardShell() {
               <WalletCards className="text-[#2E7D5B]" size={24} />
             </div>
             <div className="space-y-3">
-              {quotes.slice(0, 4).map((quote) => {
+              {quotes.slice(0, 5).map((quote) => {
                 const isDown =
                   typeof quote.changePercent === "number" &&
                   quote.changePercent < 0;

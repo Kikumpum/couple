@@ -55,13 +55,18 @@ const binanceHosts = ["https://api.binance.com", "https://data-api.binance.visio
 
 const externalAssets: ExternalAsset[] = [
   {
-    id: "aapl",
-    label: "Apple",
-    currency: "USD",
-    imageUrl: "https://companiesmarketcap.com/img/company-logos/256/AAPL.png",
-    finnhubSymbol: "AAPL",
-    twelveSymbol: "AAPL",
-    yahooSymbol: "AAPL"
+    id: "bmri",
+    label: "Bank Mandiri",
+    currency: "IDR",
+    imageUrl: "/logos/bmri.svg",
+    yahooSymbol: "BMRI.JK"
+  },
+  {
+    id: "padi",
+    label: "Minna Padi",
+    currency: "IDR",
+    imageUrl: "/idx.png",
+    yahooSymbol: "PADI.JK"
   },
   {
     id: "xauusd",
