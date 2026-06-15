@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#ffffff"/>
+  <path d="M22 50c22-20 60-20 84-2-27-7-57-4-84 2Z" fill="#f9b000"/>
+  <path d="M22 64c24-13 61-12 84 1-28-4-56-3-84-1Z" fill="#f9b000"/>
+  <text x="64" y="91" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="800" fill="#003b7a">mandiri</text>
+</svg>

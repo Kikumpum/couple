@@ -26,13 +26,44 @@ function normalizeQuery(query: string, exchange: StockExchange) {
   return cleaned;
 }
 
+const stockLogoPaths: Record<string, string> = {
+  "BBCA.JK": "/logos/bbca.svg",
+  "BBRI.JK": "/logos/bbri.svg",
+  "BMRI.JK": "/logos/bmri.svg",
+  "TLKM.JK": "/logos/tlkm.svg",
+  "ASII.JK": "/logos/asii.svg",
+  "UNVR.JK": "/logos/unvr.svg",
+  "GOTO.JK": "/logos/goto.svg",
+  "AMMN.JK": "/logos/ammn.svg",
+  "BREN.JK": "/logos/bren.svg",
+  AAPL: "/logos/aapl.svg",
+  MSFT: "/logos/msft.svg",
+  NVDA: "/logos/nvda.svg",
+  GOOGL: "/logos/googl.svg",
+  GOOG: "/logos/googl.svg",
+  AMZN: "/logos/amzn.svg",
+  META: "/logos/meta.svg",
+  TSLA: "/logos/tsla.svg",
+  AMD: "/logos/amd.svg",
+  JPM: "/logos/jpm.svg",
+  BAC: "/logos/bac.svg",
+  NFLX: "/logos/nflx.svg",
+  WMT: "/logos/wmt.svg"
+};
+
 function imageForStock(symbol: string, exchange: StockExchange) {
-  if (exchange === "idx") {
-    return "/idx.png";
+  const logoPath = stockLogoPaths[symbol];
+
+  if (logoPath) {
+    return logoPath;
   }
 
   if (symbol.startsWith("^")) {
     return "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=160&q=80";
+  }
+
+  if (exchange === "idx") {
+    return "/idx.png";
   }
 
   return `https://companiesmarketcap.com/img/company-logos/256/${symbol}.png`;

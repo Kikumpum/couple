@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#101820"/>
+  <path d="M30 91 64 25l34 66H82l-6-13H52l-6 13H30Zm28-26h12l-6-15-6 15Z" fill="#d7a84b"/>
+  <text x="64" y="109" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="800" fill="#ffffff">AMMAN</text>
+</svg>

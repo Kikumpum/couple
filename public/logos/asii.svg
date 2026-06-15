@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#ffffff"/>
+  <circle cx="64" cy="58" r="34" fill="none" stroke="#005baa" stroke-width="10"/>
+  <path d="M64 27 96 92H82l-7-15H53l-7 15H32L64 27Zm0 27-7 15h14l-7-15Z" fill="#005baa"/>
+  <text x="64" y="113" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="800" fill="#005baa">ASTRA</text>
+</svg>

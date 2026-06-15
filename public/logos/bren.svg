@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#ffffff"/>
+  <path d="M68 18c20 22 32 40 32 59 0 21-15 34-36 34S28 98 28 77c0-18 13-37 40-59Z" fill="#11895b"/>
+  <path d="M61 82c18-6 29-19 33-37 7 28-6 52-31 55-14 2-26-3-33-14 10 3 21 1 31-4Z" fill="#8cc63f"/>
+  <text x="64" y="73" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="800" fill="#ffffff">BREN</text>
+</svg>

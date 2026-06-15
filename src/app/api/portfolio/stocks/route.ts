@@ -76,7 +76,36 @@ const usIndexImages: Record<string, string> = {
     "https://images.unsplash.com/photo-1642790551116-18e150f248e3?auto=format&fit=crop&w=160&q=80"
 };
 
+const stockLogoPaths: Record<string, string> = {
+  "BBCA.JK": "/logos/bbca.svg",
+  "BBRI.JK": "/logos/bbri.svg",
+  "BMRI.JK": "/logos/bmri.svg",
+  "TLKM.JK": "/logos/tlkm.svg",
+  "ASII.JK": "/logos/asii.svg",
+  "UNVR.JK": "/logos/unvr.svg",
+  "GOTO.JK": "/logos/goto.svg",
+  "AMMN.JK": "/logos/ammn.svg",
+  "BREN.JK": "/logos/bren.svg",
+  AAPL: "/logos/aapl.svg",
+  MSFT: "/logos/msft.svg",
+  NVDA: "/logos/nvda.svg",
+  GOOGL: "/logos/googl.svg",
+  GOOG: "/logos/googl.svg",
+  AMZN: "/logos/amzn.svg",
+  META: "/logos/meta.svg",
+  TSLA: "/logos/tsla.svg",
+  AMD: "/logos/amd.svg",
+  JPM: "/logos/jpm.svg",
+  BAC: "/logos/bac.svg",
+  NFLX: "/logos/nflx.svg",
+  WMT: "/logos/wmt.svg"
+};
+
 function toNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
   const parsed = typeof value === "number" ? value : Number(value);
 
   return Number.isFinite(parsed) ? parsed : null;
@@ -100,12 +129,18 @@ function getTimeframe(value: string | null): Timeframe {
 }
 
 function imageForStock(asset: StockAsset) {
-  if (asset.exchange === "idx") {
-    return "/idx.png";
+  const logoPath = stockLogoPaths[asset.symbol];
+
+  if (logoPath) {
+    return logoPath;
   }
 
   if (usIndexImages[asset.symbol]) {
     return usIndexImages[asset.symbol];
+  }
+
+  if (asset.exchange === "idx") {
+    return "/idx.png";
   }
 
   return `https://companiesmarketcap.com/img/company-logos/256/${asset.symbol}.png`;
@@ -172,19 +207,23 @@ async function fetchYahooAsset(asset: StockAsset, timeframe: Timeframe) {
     const timestamps = Array.isArray(firstResult?.timestamp)
       ? firstResult.timestamp.map(toNumber)
       : [];
-    const closeValues = Array.isArray(quote?.close)
-      ? quote.close.map(toNumber).filter((value): value is number => value !== null)
-      : [];
-    const chartValues = config.slice ? closeValues.slice(-config.slice) : closeValues;
+    const rawCloseValues = Array.isArray(quote?.close) ? quote.close.map(toNumber) : [];
     const openValues = Array.isArray(quote?.open) ? quote.open.map(toNumber) : [];
     const highValues = Array.isArray(quote?.high) ? quote.high.map(toNumber) : [];
     const lowValues = Array.isArray(quote?.low) ? quote.low.map(toNumber) : [];
     const volumeValues = Array.isArray(quote?.volume) ? quote.volume.map(toNumber) : [];
-    const pointCount = closeValues.length;
+    const pointCount = Math.max(
+      rawCloseValues.length,
+      openValues.length,
+      highValues.length,
+      lowValues.length,
+      volumeValues.length,
+      timestamps.length
+    );
     const chartPoints = Array.from({ length: pointCount }, (_, index) => {
-      const close = closeValues[index];
+      const close = rawCloseValues[index];
 
-      if (close === undefined) {
+      if (close === null || close === undefined || close <= 0) {
         return null;
       }
 
@@ -200,6 +239,7 @@ async function fetchYahooAsset(asset: StockAsset, timeframe: Timeframe) {
     const slicedChartPoints = config.slice
       ? chartPoints.slice(-config.slice)
       : chartPoints;
+    const chartValues = slicedChartPoints.map((point) => point.close);
 
     const price = toNumber(meta?.regularMarketPrice);
     const previousClose = toNumber(

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#ffffff"/>
+  <circle cx="64" cy="52" r="30" fill="#e31b23"/>
+  <path d="M40 53c14-20 36-20 50 0-15-7-35-7-50 0Zm18 21c-3-11-1-26 6-37 7 11 9 26 6 37H58Z" fill="#ffffff"/>
+  <text x="64" y="103" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" fill="#e31b23">Telkom</text>
+</svg>

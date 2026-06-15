@@ -129,8 +129,8 @@ const modeOptions: Array<{
 ];
 
 const timeframeOptions: Array<{ value: Timeframe; label: string }> = [
-  { value: "1h", label: "1J" },
-  { value: "1d", label: "1D" },
+  { value: "1h", label: "1 Jam" },
+  { value: "1d", label: "1 Hari" },
   { value: "1w", label: "1Mgg" },
   { value: "1m", label: "1Bln" },
   { value: "6m", label: "6Bln" },
@@ -200,19 +200,50 @@ function formatTime(value: string | null) {
   }).format(date);
 }
 
-function chartPath(values: number[], width = 880, height = 300) {
+function getPaddedDomain(values: number[], paddingRatio = 0.08) {
+  const safeValues = values.filter((value) => Number.isFinite(value) && value > 0);
+
+  if (safeValues.length === 0) {
+    return { min: 0, max: 1 };
+  }
+
+  const minValue = Math.min(...safeValues);
+  const maxValue = Math.max(...safeValues);
+  const fallbackRange = Math.max(Math.abs(maxValue) * 0.01, 1);
+  const range = maxValue - minValue || fallbackRange;
+  const padding = range * paddingRatio;
+
+  return {
+    min: Math.max(0, minValue - padding),
+    max: maxValue + padding
+  };
+}
+
+function yForValue(value: number, min: number, max: number, height: number, top = 0) {
+  const range = max - min || 1;
+
+  return top + height - ((value - min) / range) * height;
+}
+
+function chartPath(
+  values: number[],
+  width = 880,
+  height = 300,
+  min?: number,
+  max?: number
+) {
   if (values.length < 2) {
     return "";
   }
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
+  const domain = min === undefined || max === undefined
+    ? getPaddedDomain(values)
+    : { min, max };
 
   return values
     .map((value, index) => {
       const x = (index / (values.length - 1)) * width;
-      const y = height - ((value - min) / range) * height;
+      const y = yForValue(value, domain.min, domain.max, height);
 
       return `${index === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
     })
@@ -231,12 +262,10 @@ function linePath(
     return "";
   }
 
-  const range = max - min || 1;
-
   return values
     .map((value, index) => {
       const x = (index / (values.length - 1)) * width;
-      const y = top + height - ((value - min) / range) * height;
+      const y = yForValue(value, min, max, height, top);
 
       return `${index === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
     })
@@ -252,6 +281,46 @@ function movingAverage(values: number[], period: number) {
   });
 }
 
+function StockLogo({
+  src,
+  alt,
+  symbol,
+  className = "h-11 w-11"
+}: {
+  src: string;
+  alt: string;
+  symbol: string;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const fallbackLabel = symbol.replace(".JK", "").replace(/^\^/, "").slice(0, 4);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
+  return (
+    <span
+      className={`relative grid flex-none place-items-center overflow-hidden rounded-2xl bg-white text-[#050816] ring-1 ring-white/20 ${className}`}
+    >
+      {failed ? (
+        <span className="px-1 text-center text-xs font-black tracking-normal">
+          {fallbackLabel}
+        </span>
+      ) : (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="56px"
+          className="object-contain p-2"
+          onError={() => setFailed(true)}
+        />
+      )}
+    </span>
+  );
+}
+
 function YahooStockChart({
   symbol,
   label,
@@ -261,7 +330,9 @@ function YahooStockChart({
   values,
   points,
   stats,
-  markets
+  markets,
+  timeframe,
+  onTimeframeChange
 }: {
   symbol: string;
   label: string;
@@ -272,15 +343,28 @@ function YahooStockChart({
   points: StockChartPoint[];
   stats?: StockStats;
   markets: StockMarket[];
+  timeframe: Timeframe;
+  onTimeframeChange: (value: Timeframe) => void;
 }) {
-  const chartValues = points.length > 0 ? points.map((point) => point.close) : values;
-  const path = chartPath(chartValues, 880, 260);
+  const chartValues = (points.length > 0 ? points.map((point) => point.close) : values)
+    .filter((value) => Number.isFinite(value) && value > 0);
   const positive = changePercent >= 0;
   const stroke = positive ? "#00A884" : "#EF4444";
   const fill = positive ? "#0A5C4A" : "#7F1D1D";
   const volumes = points.map((point) => point.volume);
   const maxVolume = Math.max(...volumes, 1);
   const previousClose = stats?.previousClose ?? null;
+  const chartWidth = 880;
+  const priceHeight = 260;
+  const domainValues = previousClose && previousClose > 0
+    ? [...chartValues, previousClose]
+    : chartValues;
+  const domain = getPaddedDomain(domainValues, 0.12);
+  const path = chartPath(chartValues, chartWidth, priceHeight, domain.min, domain.max);
+  const previousCloseY =
+    previousClose && previousClose > 0
+      ? yForValue(previousClose, domain.min, domain.max, priceHeight)
+      : null;
   const statItems = [
     ["Previous Close", formatCompact(previousClose, currency)],
     ["Open", formatCompact(stats?.open ?? null, currency)],
@@ -324,12 +408,19 @@ function YahooStockChart({
       </div>
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-700 px-4 py-3 text-xs font-semibold">
         {timeframeOptions.map((option) => (
-          <span
+          <button
             key={option.value}
-            className="rounded-md bg-slate-800 px-2.5 py-1 text-slate-300"
+            type="button"
+            aria-pressed={timeframe === option.value}
+            onClick={() => onTimeframeChange(option.value)}
+            className={`h-8 rounded-md px-3 text-xs font-semibold transition ${
+              timeframe === option.value
+                ? "bg-[#00A884] text-[#07130F]"
+                : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+            }`}
           >
             {option.label}
-          </span>
+          </button>
         ))}
         <span className="ml-auto rounded-full border border-slate-600 px-3 py-1 text-slate-300">
           Yahoo Finance style
@@ -372,12 +463,12 @@ function YahooStockChart({
             />
           ))}
         </g>
-        {previousClose ? (
+        {previousCloseY !== null ? (
           <line
             x1="0"
             x2="880"
-            y1="148"
-            y2="148"
+            y1={previousCloseY}
+            y2={previousCloseY}
             stroke="#94A3B8"
             strokeDasharray="4 4"
             strokeOpacity="0.55"
@@ -394,7 +485,14 @@ function YahooStockChart({
               strokeLinejoin="round"
               strokeWidth="2.5"
             />
-            <circle cx="12" cy="122" r="4" fill="#C084FC" />
+            <text
+              x="864"
+              y={Math.max(16, yForValue(chartValues.at(-1) ?? 0, domain.min, domain.max, priceHeight) - 8)}
+              textAnchor="end"
+              className="fill-slate-100 text-xs font-semibold"
+            >
+              {formatCompact(chartValues.at(-1) ?? null, currency)}
+            </text>
           </>
         ) : (
           <text x="440" y="140" textAnchor="middle" className="fill-slate-400 text-sm">
@@ -471,7 +569,8 @@ function BinanceCryptoChart({
   changePercent,
   candles,
   values,
-  timeframe
+  timeframe,
+  onTimeframeChange
 }: {
   symbol: string;
   price: number | null;
@@ -479,6 +578,7 @@ function BinanceCryptoChart({
   candles: CryptoCandle[];
   values: number[];
   timeframe: Timeframe;
+  onTimeframeChange: (value: Timeframe) => void;
 }) {
   const displayCandles =
     candles.length > 0
@@ -492,9 +592,7 @@ function BinanceCryptoChart({
           volume: 0
         }));
   const prices = displayCandles.flatMap((candle) => [candle.high, candle.low]);
-  const min = Math.min(...prices, 1);
-  const max = Math.max(...prices, 1);
-  const range = max - min || 1;
+  const { min, max } = getPaddedDomain(prices, 0.12);
   const chartWidth = 900;
   const priceHeight = 300;
   const latest = displayCandles[displayCandles.length - 1] ?? null;
@@ -506,7 +604,7 @@ function BinanceCryptoChart({
   const ma25 = linePath(movingAverage(closes, 25), min, max, chartWidth, priceHeight);
   const ma99 = linePath(movingAverage(closes, 99), min, max, chartWidth, priceHeight);
   const maxVolume = Math.max(...displayCandles.map((candle) => candle.volume), 1);
-  const yForPrice = (value: number) => priceHeight - ((value - min) / range) * priceHeight;
+  const yForPrice = (value: number) => yForValue(value, min, max, priceHeight);
   const open = latest?.open ?? price ?? 0;
   const high = latest?.high ?? price ?? 0;
   const low = latest?.low ?? price ?? 0;
@@ -525,12 +623,19 @@ function BinanceCryptoChart({
       <div className="flex flex-wrap items-center gap-4 border-b border-[#2B3139] px-4 py-3 text-sm font-semibold text-[#848E9C]">
         <span>Waktu</span>
         {timeframeOptions.map((option) => (
-          <span
+          <button
             key={option.value}
-            className={timeframe === option.value ? "text-white" : undefined}
+            type="button"
+            aria-pressed={timeframe === option.value}
+            onClick={() => onTimeframeChange(option.value)}
+            className={`h-8 rounded-md px-2.5 transition ${
+              timeframe === option.value
+                ? "bg-[#F0B90B] text-[#181A20]"
+                : "text-[#848E9C] hover:bg-[#2B3139] hover:text-white"
+            }`}
           >
             {option.label}
-          </span>
+          </button>
         ))}
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-2 px-4 py-3 text-sm text-[#848E9C]">
@@ -1062,15 +1167,12 @@ export function PortfolioTerminal() {
                       : stocksData?.exchangeLabel ?? "Stock exchange"}
                   </div>
                   <div className="mt-3 flex min-w-0 items-center gap-3">
-                    <span className="relative h-14 w-14 flex-none overflow-hidden rounded-2xl bg-white ring-1 ring-white/20">
-                      <Image
-                        src={activeImage}
-                        alt={activeLabel}
-                        fill
-                        sizes="56px"
-                        className="object-cover p-1.5"
-                      />
-                    </span>
+                    <StockLogo
+                      src={activeImage}
+                      alt={activeLabel}
+                      symbol={activeSymbol}
+                      className="h-14 w-14"
+                    />
                     <span className="min-w-0">
                       <h3 className="truncate text-4xl font-semibold tracking-normal">
                         {activeSymbol}
@@ -1097,6 +1199,7 @@ export function PortfolioTerminal() {
                     candles={activeCryptoCandles}
                     values={activeChart}
                     timeframe={timeframe}
+                    onTimeframeChange={setTimeframe}
                   />
                 ) : (
                   <YahooStockChart
@@ -1109,6 +1212,8 @@ export function PortfolioTerminal() {
                     points={activeStockPoints}
                     stats={activeStockStats}
                     markets={stockMarkets}
+                    timeframe={timeframe}
+                    onTimeframeChange={setTimeframe}
                   />
                 )}
               </div>
@@ -1170,15 +1275,11 @@ export function PortfolioTerminal() {
                         : "border-white/10 bg-white/8 text-white hover:-translate-y-0.5 hover:bg-white/12"
                     }`}
                   >
-                    <span className="relative h-11 w-11 overflow-hidden rounded-2xl bg-white ring-1 ring-white/20">
-                      <Image
-                        src={asset.imageUrl}
-                        alt={asset.label}
-                        fill
-                        sizes="44px"
-                        className="object-cover p-1.5"
-                      />
-                    </span>
+                    <StockLogo
+                      src={asset.imageUrl}
+                      alt={asset.label}
+                      symbol={asset.symbol}
+                    />
                     <span className="min-w-0">
                       <span className="flex items-center gap-2">
                         <span className="truncate text-sm font-semibold">
@@ -1230,6 +1331,8 @@ export function PortfolioTerminal() {
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
+                  spellCheck={false}
+                  autoCapitalize="characters"
                   placeholder={
                     mode === "stocks"
                       ? stockExchange === "idx"
@@ -1237,14 +1340,16 @@ export function PortfolioTerminal() {
                         : "Cari saham US: AAPL, JPM..."
                       : "Cari crypto"
                   }
-                  className="h-12 w-full rounded-2xl border border-white/10 bg-white/8 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-300/60 focus:ring-4 focus:ring-purple-400/10"
+                  className="h-12 w-full rounded-2xl border border-white/15 bg-[#0B1020] pl-11 pr-4 text-sm font-semibold text-slate-50 caret-emerald-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] outline-none transition placeholder:font-medium placeholder:text-slate-400 focus:border-emerald-300/70 focus:bg-[#0E1628] focus:ring-4 focus:ring-emerald-400/10"
                 />
               </label>
             </div>
             {mode === "stocks" ? (
               <p className="mt-3 text-xs font-semibold text-white/45">
-                {stockSearchStatus ||
-                  `Mode ${stockExchange === "idx" ? "IDX Indonesia" : "US market"}`}
+                {query.trim()
+                  ? `Ketik: "${query.trim()}"${stockSearchStatus ? ` - ${stockSearchStatus}` : ""}`
+                  : stockSearchStatus ||
+                    `Mode ${stockExchange === "idx" ? "IDX Indonesia" : "US market"}`}
               </p>
             ) : null}
 
@@ -1257,15 +1362,11 @@ export function PortfolioTerminal() {
                       onClick={() => setCryptoPriority(asset.symbol)}
                       className="grid grid-cols-[auto_1fr] items-center gap-3 rounded-[20px] border border-white/10 bg-white/8 p-4 text-left transition hover:-translate-y-0.5 hover:bg-white/12"
                     >
-                      <span className="relative h-11 w-11 overflow-hidden rounded-2xl bg-white ring-1 ring-white/20">
-                        <Image
-                          src={asset.imageUrl}
-                          alt={asset.label}
-                          fill
-                          sizes="44px"
-                          className="object-cover p-1.5"
-                        />
-                      </span>
+                      <StockLogo
+                        src={asset.imageUrl}
+                        alt={asset.label}
+                        symbol={asset.symbol}
+                      />
                       <span className="min-w-0">
                         <span className="flex items-center justify-between gap-2">
                           <span className="truncate text-sm font-semibold">
@@ -1301,15 +1402,11 @@ export function PortfolioTerminal() {
                       onClick={() => selectStock(asset.symbol, asset.label)}
                       className="grid grid-cols-[auto_1fr] items-center gap-3 rounded-[20px] border border-white/10 bg-white/8 p-4 text-left transition hover:-translate-y-0.5 hover:bg-white/12"
                     >
-                      <span className="relative h-11 w-11 overflow-hidden rounded-2xl bg-white ring-1 ring-white/20">
-                        <Image
-                          src={asset.imageUrl}
-                          alt={asset.label}
-                          fill
-                          sizes="44px"
-                          className="object-cover p-1.5"
-                        />
-                      </span>
+                      <StockLogo
+                        src={asset.imageUrl}
+                        alt={asset.label}
+                        symbol={asset.symbol}
+                      />
                       <span className="min-w-0">
                         <span className="flex items-center justify-between gap-3">
                           <span className="min-w-0">
