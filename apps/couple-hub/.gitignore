@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.data/
+.test-build/
+test-results/
+.env*
+!.env.example
+*.log
+*.tsbuildinfo
+*.sqlite*
+*.db
+coverage/
+.publish/
+.qa/
+.DS_Store

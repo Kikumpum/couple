@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FinanceType {
+  INCOME
+  EXPENSE
+  SAVING_ALLOCATION
+  INVESTMENT_BUY
+  INVESTMENT_SELL
+}
+
+enum InvestmentType {
+  GOLD
+  STOCK_ID
+  CRYPTO
+  MUTUAL_FUND
+  MONEY_MARKET
+  BOND
+}
+
+enum PeriodFlow {
+  SPOTTING
+  LIGHT
+  MEDIUM
+  HEAVY
+}
+
+enum ReadingStatus {
+  WISHLIST
+  READING
+  FINISHED
+  PAUSED
+}
+
+enum ReadingCategory {
+  FINANCIAL_LITERACY
+  SEXUAL_REPRODUCTIVE_HEALTH
+  LAW_MARRIAGE
+  SELF_DEVELOPMENT
+}
+
+model User {
+  id                   String                   @id @default(cuid())
+  email                String                   @unique
+  name                 String
+  avatarUrl            String?
+  dateOfBirth          DateTime?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  ownedConnections     PartnerConnection[]      @relation("ConnectionOwner")
+  partnerConnections   PartnerConnection[]      @relation("ConnectionPartner")
+  financeRecords       FinanceRecord[]
+  investmentsPortfolio InvestmentsPortfolio[]
+  periodLogs           PeriodLog[]
+  readingList          ReadingList[]
+  notificationSettings PushNotificationPreference?
+
+  @@map("users")
+}
+
+model PartnerConnection {
+  id        String   @id @default(cuid())
+  ownerId   String
+  partnerId String
+  label     String   @default("Main Couple")
+  startedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  owner     User     @relation("ConnectionOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  partner   User     @relation("ConnectionPartner", fields: [partnerId], references: [id], onDelete: Cascade)
+
+  financeRecords       FinanceRecord[]
+  investmentsPortfolio InvestmentsPortfolio[]
+  periodLogs           PeriodLog[]
+  readingList          ReadingList[]
+  financialGoals       FinancialGoal[]
+  movieRatings         MovieRating[]
+
+  @@unique([ownerId, partnerId])
+  @@map("partner_connections")
+}
+
+model FinanceRecord {
+  id           String            @id @default(cuid())
+  coupleId     String
+  userId       String
+  type         FinanceType
+  title        String
+  category     String
+  amount       Decimal           @db.Decimal(14, 2)
+  currency     String            @default("IDR")
+  recordDate   DateTime
+  note         String?
+  receiptUrl   String?
+  goalName     String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  couple       PartnerConnection @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([coupleId, recordDate])
+  @@index([userId, type])
+  @@map("finance_records")
+}
+
+model InvestmentsPortfolio {
+  id             String                    @id @default(cuid())
+  coupleId       String
+  userId         String
+  type           InvestmentType
+  symbol         String
+  name           String
+  units          Decimal                   @db.Decimal(18, 8)
+  averagePrice   Decimal                   @db.Decimal(18, 4)
+  currency       String                    @default("IDR")
+  provider       String?
+  externalId     String?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  couple         PartnerConnection         @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  user           User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  priceSnapshots InvestmentPriceSnapshot[]
+
+  @@unique([coupleId, type, symbol])
+  @@index([symbol, type])
+  @@map("investments_portfolio")
+}
+
+model InvestmentPriceSnapshot {
+  id            String               @id @default(cuid())
+  portfolioId   String
+  price         Decimal              @db.Decimal(18, 4)
+  currency      String               @default("IDR")
+  changePercent Decimal?             @db.Decimal(8, 4)
+  source        String
+  capturedAt    DateTime             @default(now())
+  portfolio     InvestmentsPortfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@index([portfolioId, capturedAt])
+  @@map("investment_price_snapshots")
+}
+
+model PeriodLog {
+  id             String            @id @default(cuid())
+  coupleId       String
+  userId         String
+  startDate      DateTime
+  endDate        DateTime?
+  flow           PeriodFlow?
+  symptoms       String[]
+  mood           String?
+  notes          String?
+  cycleLength    Int?
+  periodLength   Int?
+  isPredicted    Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  couple         PartnerConnection @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([coupleId, startDate])
+  @@map("period_logs")
+}
+
+model ReadingList {
+  id             String            @id @default(cuid())
+  coupleId       String
+  userId         String
+  title          String
+  author         String?
+  category       ReadingCategory
+  status         ReadingStatus     @default(WISHLIST)
+  rating         Int?
+  progressPage   Int?
+  totalPages     Int?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  notes          String?
+  coverUrl       String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  couple         PartnerConnection @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([coupleId, category, status])
+  @@map("reading_list")
+}
+
+model PushNotificationPreference {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  endpoint           String
+  p256dh             String
+  auth               String
+  pmsAlerts          Boolean  @default(true)
+  fertileWindowAlert Boolean  @default(true)
+  vitaminReminder    Boolean  @default(true)
+  financeDigest      Boolean  @default(true)
+  quietHoursStart    String?
+  quietHoursEnd      String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_notification_preferences")
+}
+
+model FinancialGoal {
+  id             String            @id @default(cuid())
+  coupleId       String
+  name           String
+  description    String?
+  targetAmount   Decimal           @db.Decimal(14, 2)
+  currentAmount  Decimal           @db.Decimal(14, 2) @default(0)
+  currency       String            @default("IDR")
+  targetDate     DateTime?
+  priority       Int               @default(0)
+  icon           String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  couple         PartnerConnection @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+
+  @@index([coupleId])
+  @@map("financial_goals")
+}
+
+model MovieCache {
+  id          String   @id @default(cuid())
+  tmdbId      Int      @unique
+  title       String
+  posterUrl   String?
+  backdropUrl String?
+  synopsis    String?
+  rating      Float?
+  releaseDate DateTime?
+  genres      String[] @default([])
+  source      String   @default("tmdb")
+  fetchedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("movie_cache")
+}
+
+model MovieRating {
+  id       String   @id @default(cuid())
+  coupleId String
+  tmdbId   Int
+  rating   Int?
+  notes    String?
+  ratedAt  DateTime @default(now())
+
+  couple PartnerConnection @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+
+  @@unique([coupleId, tmdbId])
+  @@map("movie_ratings")
+}
