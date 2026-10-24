@@ -121,6 +121,9 @@ export async function request<T>(
   if (!response.ok) {
     const messages: Record<string, string> = {
       UNAUTHENTICATED: "Sesi berakhir. Silakan masuk kembali.",
+      DATABASE_NOT_CONFIGURED: "Database online belum terhubung.",
+      IMPORT_PENDING:
+        "Pemindahan data sedang berlangsung. Coba beberapa saat lagi.",
       INVALID_CREDENTIALS: "Nama pengguna, email, atau kata sandi tidak cocok.",
       REGISTRATION_FAILED:
         "Akun tidak dapat dibuat. Periksa email atau coba masuk.",

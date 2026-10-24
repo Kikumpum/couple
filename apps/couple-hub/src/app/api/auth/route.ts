@@ -1,4 +1,6 @@
 import { db } from "@/server/db";
+import { cloudEnabled } from "@/server/cloud-store";
+import { cloudAuth } from "@/server/cloud";
 import { body, fail, handle, json, text } from "@/server/http";
 import {
   createSession,
@@ -17,6 +19,7 @@ import { snapshot } from "@/server/data";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export function GET(request: Request) {
+  if (cloudEnabled()) return cloudAuth(request);
   return handle(() => {
     const user = currentUser(request);
     return user
@@ -36,6 +39,7 @@ export function GET(request: Request) {
   });
 }
 export function POST(request: Request) {
+  if (cloudEnabled()) return cloudAuth(request);
   return handle(async () => {
     const input = await body(request);
     if (input.action === "logout")

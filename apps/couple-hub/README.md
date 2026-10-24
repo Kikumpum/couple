@@ -8,6 +8,7 @@ Aplikasi pribadi untuk pasangan. Login, pencatatan, dan izin berbagi memakai bac
 - React
 - Tailwind CSS
 - SQLite melalui `node:sqlite` (Node 22.13+; API masih experimental pada Node 22)
+- PostgreSQL Neon melalui Prisma untuk deployment Vercel
 - TMDB, CoinGecko, dan endpoint publik Yahoo Finance melalui server
 
 ## Struktur
@@ -15,6 +16,8 @@ Aplikasi pribadi untuk pasangan. Login, pencatatan, dan izin berbagi memakai bac
 - `src/components/CoupleApp.tsx`: dashboard akun dan alur CRUD.
 - `src/components/MarketWatchlist.tsx`: saham Indonesia, AS, dan kripto per akun.
 - `src/server/db.ts`: skema SQLite aktif dan migrasi aditif, tanpa reset data.
+- `src/server/cloud.ts`: autentikasi, CRUD, izin pasangan, dan SSE PostgreSQL.
+- `prisma/cloud.prisma`: skema PostgreSQL aktif untuk cloud; tabel berawalan `couple_v2_`.
 - `src/server/records.ts`: validasi field dan jumlah.
 - `src/app/api/`: autentikasi, CRUD, koneksi pasangan, event sinkronisasi, dan provider.
 - `tests/`: pengujian akses data, siklus, sinkronisasi, dan pemetaan harga.
@@ -36,6 +39,8 @@ Lalu buka http://127.0.0.1:3010. Buat akunmu sendiri, lalu masuk dengan nama pen
 COUPLE_DB_PATH=".data/couple-hub.sqlite"
 APP_ORIGIN=""
 TMDB_API_TOKEN=""
+# Cloud only: database khusus Couple Hub, bukan proyek lain.
+COUPLE_DATABASE_DATABASE_URL=""
 ```
 
 Gunakan `.env.local` yang tidak di-commit. Token TMDB opsional; tanpa token, rencana date manual tetap tersedia dan radar film menunjukkan konfigurasi belum siap.
@@ -64,7 +69,11 @@ npm audit
 
 ## Batas Deployment
 
-Versi ini untuk lokal atau satu server Node dengan disk persisten. JANGAN deploy SQLite lokal ini ke Vercel/serverless: file antar-replika tidak dibagi dan tidak persisten. Migrasi adapter data ke PostgreSQL terkelola serta verifikasi deployment diperlukan sebelum memakai Vercel.
+Lokal tanpa konfigurasi cloud memakai SQLite. Vercel wajib memakai PostgreSQL khusus melalui `COUPLE_DATABASE_DATABASE_URL`; aplikasi tidak beralih diam-diam ke SQLite atau ke `DATABASE_URL` proyek lain. Atur Root Directory Vercel ke `apps/couple-hub`, Node 22.x. Tabel cloud dibuat secara aditif, tanpa reset. Pisahkan database Preview dan Production.
+
+Sinkronisasi cloud memakai invalidasi SSE dengan pemeriksaan revisi setiap 2 detik, bukan streaming PostgreSQL langsung. Koneksi diperbarui setiap 50 detik untuk runtime serverless. Kuota database dan fungsi perlu dipantau.
+
+Migrasi lokal memakai `/api/transfer` dengan token sementara `COUPLE_MIGRATION_TOKEN` khusus Production. Impor hanya menerima dua akun aryo/fia, mempertahankan ID, hash kata sandi, kepemilikan, dan waktu catatan. Target harus kosong; impor dikunci setelah berhasil. Backup SQLite-aware wajib dibuat terlebih dahulu. Jangan commit token, backup, atau database. Hapus token setelah verifikasi.
 
 Untuk server publik: gunakan HTTPS, set `APP_ORIGIN` ke origin publik persis, lindungi izin direktori data, gunakan backup SQLite-aware yang terenkripsi, uji pemulihan backup, dan konfigurasi proxy agar SSE tidak dibuffer. Database lokal belum dienkripsi at rest. Jangan anggap versi ini telah diaudit keamanan produksi.
 

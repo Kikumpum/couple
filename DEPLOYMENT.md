@@ -1,9 +1,20 @@
 # A&Z Hub Deployment Runbook
 
+## Current Couple Hub deployment
+
+The active new application is `apps/couple-hub`. Vercel project `couple` now
+uses that Root Directory and Node 22.x. Its dedicated Neon integration provides
+`COUPLE_DATABASE_DATABASE_URL`; never reuse the unrelated nam-demo database.
+See `apps/couple-hub/README.md` for the active cloud schema, authentication,
+one-shot local migration, and synchronization limits.
+
+The remaining sections below describe the legacy root application and the
+earlier build-boundary repair, not the current production setup. In particular,
+do not run the root Prisma migrations against the new Couple Hub database.
+
 ## Monorepo build boundaries
 
-The existing Vercel project builds the application at the repository root. Keep
-that project's Root Directory at the repository root. Its TypeScript includes
+The legacy application builds at the repository root. Its TypeScript includes
 only `src/**/*.ts`, `src/**/*.tsx`, Next-generated types, and `next-env.d.ts`;
 root ESLint ignores `apps/**`. The nested app has its own configuration and alias.
 
@@ -18,13 +29,12 @@ npm run build
 The failed preview for commit `a6ee218` included nested app files in the root
 TypeScript project. As a result, `@/server/auth` was resolved against root `src/`
 instead of `apps/couple-hub/src/`. Do not suppress TypeScript errors or switch the
-production Root Directory to hide this problem.
+production Root Directory merely to hide this problem. The new cloud adapter
+now makes an intentional switch to `apps/couple-hub` possible.
 
-`apps/couple-hub` currently uses local SQLite and is not a Vercel-compatible data
-backend. Deploying the newer authenticated app requires a persistent cloud data
-adapter and separately provisioned accounts. Local user databases and credentials
-must not be committed or copied into deployment artifacts. This build fix does
-not migrate, reset, or publish local user data.
+At the time of that earlier repair, `apps/couple-hub` used local SQLite only.
+It now has a dedicated PostgreSQL adapter for Vercel. Local user databases and
+credentials must not be committed or copied into deployment artifacts.
 
 The root dependency lockfile now includes compatible security updates, including
 Next.js 15.5.28 and patched PostCSS. The audit still reports three high-severity

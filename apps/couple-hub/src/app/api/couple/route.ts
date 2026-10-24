@@ -1,10 +1,13 @@
 import { randomBytes } from "node:crypto";
+import { cloudEnabled } from "@/server/cloud-store";
+import { cloudCouple } from "@/server/cloud";
 import { hash, newId, requireUser, throttle, User } from "@/server/auth";
 import { db, transaction } from "@/server/db";
 import { disconnect } from "@/server/data";
 import { body, boolean, fail, handle, text } from "@/server/http";
 export const runtime = "nodejs";
 export function POST(request: Request) {
+  if (cloudEnabled()) return cloudCouple(request);
   return handle(async () => {
     const input = await body(request);
     const caller = requireUser(request);

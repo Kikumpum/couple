@@ -67,7 +67,10 @@ export function sameOrigin(request: Request) {
   )
     fail(403, "ORIGIN_REJECTED", "Same-origin request required.");
 }
-export async function body(request: Request): Promise<Record<string, unknown>> {
+export async function body(
+  request: Request,
+  maxBytes = 16384,
+): Promise<Record<string, unknown>> {
   sameOrigin(request);
   if (
     !request.headers
@@ -84,9 +87,9 @@ export async function body(request: Request): Promise<Record<string, unknown>> {
     const { done, value } = await reader.read();
     if (done) break;
     size += value.length;
-    if (size > 16384) {
+    if (size > maxBytes) {
       await reader.cancel();
-      fail(413, "BODY_TOO_LARGE", "Request exceeds 16 KB.");
+      fail(413, "BODY_TOO_LARGE", "Request exceeds the allowed size.");
     }
     chunks.push(value);
   }

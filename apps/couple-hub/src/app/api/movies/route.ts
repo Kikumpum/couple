@@ -1,12 +1,17 @@
 import { requireUser, throttle } from "@/server/auth";
 import { fail, handle, text } from "@/server/http";
 import { providerJSON } from "@/server/providers";
+import { cloudEnabled } from "@/server/cloud-store";
+import { cloudUser, cloudThrottle } from "@/server/cloud";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export function GET(request: Request) {
   return handle(async () => {
-    const user = requireUser(request);
-    throttle(`movies:${user.id}`, 60, 60000);
+    const user = cloudEnabled()
+      ? (await cloudUser(request))!
+      : requireUser(request);
+    if (cloudEnabled()) await cloudThrottle(`movies:${user.id}`, 60, 60000);
+    else throttle(`movies:${user.id}`, 60, 60000);
     const token = process.env.TMDB_API_TOKEN;
     if (!token)
       fail(503, "PROVIDER_NOT_CONFIGURED", "TMDB_API_TOKEN is not configured.");

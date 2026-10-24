@@ -1,13 +1,17 @@
 import { currentUser, requireUser, throttle } from "@/server/auth";
+import { cloudEnabled } from "@/server/cloud-store";
+import { cloudEvents } from "@/server/cloud";
 import { db } from "@/server/db";
 import { handle, fail } from "@/server/http";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 const connections = new Map<string, number>();
 
 // Send invalidations, never record contents. Each refresh rechecks membership and consent.
 export function GET(request: Request) {
+  if (cloudEnabled()) return cloudEvents(request);
   return handle(() => {
     const user = requireUser(request);
     if ((connections.get(user.id) ?? 0) >= 5)

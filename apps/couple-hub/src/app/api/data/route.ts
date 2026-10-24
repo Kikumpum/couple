@@ -1,4 +1,6 @@
 import { requireUser, newId } from "@/server/auth";
+import { cloudEnabled } from "@/server/cloud-store";
+import { cloudData } from "@/server/cloud";
 import { db, transaction } from "@/server/db";
 import { accessibleGoal, clearGoalLinks, Row, snapshot } from "@/server/data";
 import { body, fail, handle, id, object } from "@/server/http";
@@ -6,6 +8,7 @@ import { collection, validateRecord } from "@/server/records";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export function GET(request: Request) {
+  if (cloudEnabled()) return cloudData(request);
   return handle(() => snapshot(requireUser(request)));
 }
 async function mutate(request: Request, method: string) {
@@ -93,11 +96,14 @@ async function mutate(request: Request, method: string) {
   });
 }
 export function POST(request: Request) {
+  if (cloudEnabled()) return cloudData(request);
   return handle(() => mutate(request, "POST"));
 }
 export function PATCH(request: Request) {
+  if (cloudEnabled()) return cloudData(request);
   return handle(() => mutate(request, "PATCH"));
 }
 export function DELETE(request: Request) {
+  if (cloudEnabled()) return cloudData(request);
   return handle(() => mutate(request, "DELETE"));
 }

@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("COUPLE_DATABASE_DATABASE_URL")
+}
+model HubUser {
+  id String @id
+  name String
+  email String @unique
+  username String? @unique
+  password String
+  coupleId String?
+  couple HubCouple? @relation(fields: [coupleId], references: [id], onDelete: SetNull)
+  shareHealth Boolean @default(false)
+  theme String @default("light")
+  revision Int @default(0)
+  records HubRecord[]
+  sessions HubSession[]
+  invites HubInvite[]
+  @@map("couple_v2_users")
+}
+model HubCouple {
+  id String @id
+  users HubUser[]
+  records HubRecord[]
+  @@map("couple_v2_couples")
+}
+model HubRecord {
+  id String @id
+  collection String
+  userId String
+  owner HubUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coupleId String?
+  couple HubCouple? @relation(fields: [coupleId], references: [id], onDelete: SetNull)
+  data Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId, collection])
+  @@index([coupleId, collection])
+  @@map("couple_v2_records")
+}
+model HubSession {
+  hash String @id
+  userId String
+  user HubUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  @@index([userId])
+  @@map("couple_v2_sessions")
+}
+model HubInvite {
+  hash String @id
+  userId String
+  user HubUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  @@map("couple_v2_invites")
+}
+model HubThrottle {
+  key String @id
+  attempts Int
+  expiresAt DateTime
+  @@map("couple_v2_throttle")
+}
+model HubMigration {
+  id String @id
+  completedAt DateTime @default(now())
+  @@map("couple_v2_migrations")
+}

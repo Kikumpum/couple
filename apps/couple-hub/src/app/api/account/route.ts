@@ -1,9 +1,12 @@
 import { logout, password, requireUser, throttle, verify } from "@/server/auth";
+import { cloudEnabled } from "@/server/cloud-store";
+import { cloudAccount } from "@/server/cloud";
 import { body, fail, handle, json } from "@/server/http";
 import { db, transaction } from "@/server/db";
 import { clearGoalLinks, disconnect } from "@/server/data";
 export const runtime = "nodejs";
 export function PATCH(request: Request) {
+  if (cloudEnabled()) return cloudAccount(request);
   return handle(async () => {
     const input = await body(request);
     const user = requireUser(request);
@@ -16,6 +19,7 @@ export function PATCH(request: Request) {
   });
 }
 export function DELETE(request: Request) {
+  if (cloudEnabled()) return cloudAccount(request);
   return handle(async () => {
     const input = await body(request);
     const user = requireUser(request);

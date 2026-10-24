@@ -7,3 +7,4 @@ dist
 *.tsbuildinfo
 *.log
 prisma/dev.db
+.vercel
