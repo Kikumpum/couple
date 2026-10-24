@@ -1,5 +1,37 @@
 # A&Z Hub Deployment Runbook
 
+## Monorepo build boundaries
+
+The existing Vercel project builds the application at the repository root. Keep
+that project's Root Directory at the repository root. Its TypeScript includes
+only `src/**/*.ts`, `src/**/*.tsx`, Next-generated types, and `next-env.d.ts`;
+root ESLint ignores `apps/**`. The nested app has its own configuration and alias.
+
+Check both the actual deployment target and the isolated app, not just the latter:
+
+```bash
+npm ci
+node scripts/check-project-boundaries.mjs
+npm run build
+```
+
+The failed preview for commit `a6ee218` included nested app files in the root
+TypeScript project. As a result, `@/server/auth` was resolved against root `src/`
+instead of `apps/couple-hub/src/`. Do not suppress TypeScript errors or switch the
+production Root Directory to hide this problem.
+
+`apps/couple-hub` currently uses local SQLite and is not a Vercel-compatible data
+backend. Deploying the newer authenticated app requires a persistent cloud data
+adapter and separately provisioned accounts. Local user databases and credentials
+must not be committed or copied into deployment artifacts. This build fix does
+not migrate, reset, or publish local user data.
+
+The root dependency lockfile now includes compatible security updates, including
+Next.js 15.5.28 and patched PostCSS. The audit still reports three high-severity
+transitive development-tool findings in the Prisma CLI/config/deepmerge-ts chain.
+Those require a separately tested Prisma-toolchain remediation; this preview fix
+does not force a Prisma major upgrade or claim a clean security audit.
+
 ## Current readiness
 
 - `npm run build` must pass before every deploy.

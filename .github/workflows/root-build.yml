@@ -1,0 +1,39 @@
+name: Root App Build
+on:
+  push:
+    paths:
+      - "apps/**"
+      - "src/**"
+      - "prisma/**"
+      - "package*.json"
+      - "tsconfig.json"
+      - "next.config.ts"
+      - "eslint.config.mjs"
+      - "scripts/check-project-boundaries.mjs"
+      - ".github/workflows/root-build.yml"
+  pull_request:
+    paths:
+      - "apps/**"
+      - "src/**"
+      - "prisma/**"
+      - "package*.json"
+      - "tsconfig.json"
+      - "next.config.ts"
+      - "eslint.config.mjs"
+      - "scripts/check-project-boundaries.mjs"
+      - ".github/workflows/root-build.yml"
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-project-boundaries.mjs
+      - run: npm run lint
+      - run: npm run build
